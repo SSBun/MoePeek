@@ -104,6 +104,9 @@ final class PopupPanelController {
                 coordinator: coordinator,
                 onOpenSettings: { [weak self] in
                     self?.dismiss()
+                },
+                onCopyFirstAndDismiss: { [weak self] in
+                    self?.dismiss()
                 }
             )
             .environment(\.popupPanel, newPanel)

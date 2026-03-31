@@ -1,3 +1,4 @@
+import AppKit
 import Defaults
 import SwiftUI
 
@@ -5,6 +6,7 @@ import SwiftUI
 struct PopupView: View {
     let coordinator: TranslationCoordinator
     var onOpenSettings: (() -> Void)?
+    var onCopyFirstAndDismiss: (() -> Void)?
     @Environment(\.openSettings) private var openSettings
     @State private var editableText: String = ""
     @State private var isOpeningSettings = false
@@ -15,12 +17,24 @@ struct PopupView: View {
     @State private var containerHeight: CGFloat = CGFloat(Defaults[.popupDefaultHeight])
     @Default(.popupFontSize) private var fontSize
 
+    @State private var commandEnterMonitor: Any?
+
     private let inputMinHeight: CGFloat = 36
     private let contentHorizontalPadding: CGFloat = 14
 
     private var maxInputHeight: CGFloat {
         // Reserve 120pt for language bar + results; floor ensures drag range above inputMinHeight
         max(containerHeight - 120, inputMinHeight + 24)
+    }
+
+    /// Finds the first completed translation text from the coordinator.
+    var firstCompletedTranslation: String? {
+        for slot in coordinator.activeSlots {
+            if case .completed(let text) = coordinator.providerStates[slot.id] {
+                return text
+            }
+        }
+        return nil
     }
 
     var body: some View {
@@ -75,6 +89,27 @@ struct PopupView: View {
         }
         .onChange(of: coordinator.translationGeneration) { _, _ in
             expandedProviders = Set(coordinator.activeSlots.map(\.id))
+        }
+        .onAppear {
+            // Monitor for ⌘+Enter to copy first result and close
+            let monitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
+                guard event.keyCode == 36, event.modifierFlags.contains(.command) else { return event }
+                Task { @MainActor [onCopyFirstAndDismiss = self.onCopyFirstAndDismiss, firstCompletedTranslation = self.firstCompletedTranslation] in
+                    if let text = firstCompletedTranslation {
+                        NSPasteboard.general.clearContents()
+                        NSPasteboard.general.setString(text, forType: .string)
+                        onCopyFirstAndDismiss?()
+                    }
+                }
+                return nil // Consume the event
+            }
+            commandEnterMonitor = monitor
+        }
+        .onDisappear {
+            if let monitor = commandEnterMonitor {
+                NSEvent.removeMonitor(monitor)
+                commandEnterMonitor = nil
+            }
         }
     }
 

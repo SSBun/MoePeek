@@ -23,7 +23,7 @@ struct SourceInputView: View {
             HStack(spacing: 4) {
                 Spacer()
 
-                Text("↵ Translate · ⇧↵ Newline")
+                Text("↵ Translate · ⇧↵ Newline · ⌘↵ Copy & Close")
                     .font(.popup(name: fontName, size: CGFloat(fontSize - 4)))
                     .foregroundStyle(.quaternary)
             }
