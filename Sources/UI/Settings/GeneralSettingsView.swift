@@ -15,6 +15,7 @@ struct GeneralSettingsView: View {
     @Default(.sourceLanguage) private var sourceLanguage
     @Default(.detectionConfidenceThreshold) private var confidenceThreshold
     @Default(.appLanguage) private var appLanguage
+    @Default(.capitalizeFirstLetter) private var capitalizeFirstLetter
 
     private var textDetectionModeDescription: String {
         switch textDetectionMode {
@@ -84,6 +85,8 @@ struct GeneralSettingsView: View {
                         Text(name).tag(code)
                     }
                 }
+
+                Toggle("Capitalize first letter of translation", isOn: $capitalizeFirstLetter)
 
                 Toggle("Show floating icon on text selection", isOn: $isAutoDetectEnabled)
 

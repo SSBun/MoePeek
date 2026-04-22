@@ -11,13 +11,15 @@ final class PopupPanelController {
     private var dismissMonitor: PopupDismissMonitor?
 
     private let coordinator: TranslationCoordinator
+    let historyManager: TranslationHistoryManager
 
     /// The app that was frontmost before we activated ourselves for input mode.
     /// Used to restore focus after dismissing the input panel.
     private var previouslyActiveApp: NSRunningApplication?
 
-    init(coordinator: TranslationCoordinator) {
+    init(coordinator: TranslationCoordinator, historyManager: TranslationHistoryManager) {
         self.coordinator = coordinator
+        self.historyManager = historyManager
     }
 
     func showAtCursor() {
@@ -102,6 +104,7 @@ final class PopupPanelController {
             let newPanel = PopupPanel(contentRect: NSRect(origin: .zero, size: initialSize))
             let contentView = PopupView(
                 coordinator: coordinator,
+                historyManager: historyManager,
                 onOpenSettings: { [weak self] in
                     self?.dismiss()
                 },

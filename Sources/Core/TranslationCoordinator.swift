@@ -38,6 +38,7 @@ final class TranslationCoordinator {
     let registry: TranslationProviderRegistry
     private let permissionManager: PermissionManager
     private var activeTasks: [String: Task<Void, Never>] = [:]
+    var historyManager: TranslationHistoryManager?
 
     init(permissionManager: PermissionManager, registry: TranslationProviderRegistry) {
         self.permissionManager = permissionManager
@@ -247,10 +248,30 @@ final class TranslationCoordinator {
             } else {
                 providerStates[provider.id] = .completed(text: accumulated)
             }
+
+            recordHistoryIfNeeded()
         } catch {
             guard !Task.isCancelled else { return }
             providerStates[provider.id] = .error(message: error.localizedDescription)
+
+            recordHistoryIfNeeded()
         }
+    }
+
+    private func recordHistoryIfNeeded() {
+        guard allFinished, hasAnyResult, !sourceText.isEmpty else { return }
+
+        let firstCompleted: String? = activeSlots.compactMap { provider in
+            if case .completed(let text) = providerStates[provider.id] { return text }
+            return nil
+        }.first
+
+        historyManager?.record(
+            sourceText: sourceText,
+            sourceLanguage: detectedLanguage,
+            targetLanguage: targetLanguage,
+            translatedText: firstCompleted
+        )
     }
 
     private func cancelAll() {

@@ -9,6 +9,12 @@ struct ProviderResultCard: View {
     var onRetry: (() -> Void)?
     @Default(.popupFontSize) private var fontSize
     @Default(.popupFontName) private var fontName
+    @Default(.capitalizeFirstLetter) private var capitalizeFirstLetter
+
+    /// Formats text, optionally capitalizing the first letter if enabled.
+    private func formatText(_ text: String) -> String {
+        TextFormatter.format(text, capitalizeFirstLetter: capitalizeFirstLetter)
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -101,7 +107,7 @@ struct ProviderResultCard: View {
                 .foregroundStyle(.secondary)
         case let .streaming(partial):
             VStack(alignment: .leading, spacing: 4) {
-                Text(partial)
+                Text(formatText(partial))
                     .font(.popup(name: fontName, size: CGFloat(fontSize)))
                     .foregroundStyle(.primary)
                     .textSelection(.enabled)
@@ -110,7 +116,7 @@ struct ProviderResultCard: View {
             .background { InteractiveMarker() }
         case let .completed(text):
             VStack(alignment: .leading, spacing: 4) {
-                Text(text)
+                Text(formatText(text))
                     .font(.popup(name: fontName, size: CGFloat(fontSize)))
                     .foregroundStyle(.primary)
                     .textSelection(.enabled)
@@ -119,8 +125,9 @@ struct ProviderResultCard: View {
                 HStack {
                     Spacer()
                     Button {
+                        let formattedText = formatText(text)
                         NSPasteboard.general.clearContents()
-                        NSPasteboard.general.setString(text, forType: .string)
+                        NSPasteboard.general.setString(formattedText, forType: .string)
                     } label: {
                         Label("Copy", systemImage: "doc.on.doc")
                             .font(.popup(name: fontName, size: CGFloat(fontSize - 2)))

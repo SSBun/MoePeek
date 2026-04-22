@@ -17,7 +17,7 @@ final class UpdaterController {
 
     init() {
         sparkleController = SPUStandardUpdaterController(
-            startingUpdater: true,
+            startingUpdater: false,
             updaterDelegate: nil,
             userDriverDelegate: nil
         )

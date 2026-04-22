@@ -5,6 +5,7 @@ import SwiftUI
 /// The SwiftUI content displayed inside the popup translation panel.
 struct PopupView: View {
     let coordinator: TranslationCoordinator
+    var historyManager: TranslationHistoryManager?
     var onOpenSettings: (() -> Void)?
     var onCopyFirstAndDismiss: (() -> Void)?
     @Environment(\.openSettings) private var openSettings
@@ -16,11 +17,19 @@ struct PopupView: View {
     @State private var inputHeight: CGFloat = CGFloat(Defaults[.popupInputHeight])
     @State private var containerHeight: CGFloat = CGFloat(Defaults[.popupDefaultHeight])
     @Default(.popupFontSize) private var fontSize
+    @Default(.capitalizeFirstLetter) private var capitalizeFirstLetter
 
     @State private var commandEnterMonitor: Any?
+    @State private var historyEntries: [TranslationHistoryEntry] = []
 
     private let inputMinHeight: CGFloat = 36
     private let contentHorizontalPadding: CGFloat = 14
+
+    private var shouldShowHistory: Bool {
+        editableText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            && coordinator.activeSlots.isEmpty
+            && coordinator.globalError == nil
+    }
 
     private var maxInputHeight: CGFloat {
         // Reserve 120pt for language bar + results; floor ensures drag range above inputMinHeight
@@ -86,22 +95,41 @@ struct PopupView: View {
             sourceLang = Defaults[.sourceLanguage]
             targetLang = coordinator.targetLanguage
             expandedProviders = Set(coordinator.activeSlots.map(\.id))
+            historyEntries = historyManager?.entries ?? []
         }
         .onChange(of: coordinator.translationGeneration) { _, _ in
             expandedProviders = Set(coordinator.activeSlots.map(\.id))
         }
         .onAppear {
-            // Monitor for ⌘+Enter to copy first result and close
+            // Monitor for ⌘+Enter (copy & close) and ⌘+1..9 (history shortcut)
             let monitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
-                guard event.keyCode == 36, event.modifierFlags.contains(.command) else { return event }
-                Task { @MainActor [onCopyFirstAndDismiss = self.onCopyFirstAndDismiss, firstCompletedTranslation = self.firstCompletedTranslation] in
-                    if let text = firstCompletedTranslation {
-                        NSPasteboard.general.clearContents()
-                        NSPasteboard.general.setString(text, forType: .string)
-                        onCopyFirstAndDismiss?()
+                let flags = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
+
+                // ⌘+Enter: copy first result and close
+                if event.keyCode == 36, flags == .command {
+                    Task { @MainActor [onCopyFirstAndDismiss = self.onCopyFirstAndDismiss, firstCompletedTranslation = self.firstCompletedTranslation, capitalizeFirstLetter = self.capitalizeFirstLetter] in
+                        if let text = firstCompletedTranslation {
+                            let formattedText = TextFormatter.format(text, capitalizeFirstLetter: capitalizeFirstLetter)
+                            NSPasteboard.general.clearContents()
+                            NSPasteboard.general.setString(formattedText, forType: .string)
+                            onCopyFirstAndDismiss?()
+                        }
                     }
+                    return nil
                 }
-                return nil // Consume the event
+
+                // ⌘+1..9: select history entry for retranslation
+                if flags == .command, let chars = event.characters, let digit = chars.first, digit.isNumber, digit != "0" {
+                    let idx = digit.wholeNumberValue! - 1
+                    let entries = self.historyEntries
+                    guard idx < entries.count else { return nil }
+                    let entry = entries[idx]
+                    self.editableText = entry.sourceText
+                    self.coordinator.translate(entry.sourceText)
+                    return nil
+                }
+
+                return event
             }
             commandEnterMonitor = monitor
         }
@@ -226,24 +254,31 @@ struct PopupView: View {
                 Divider()
                     .padding(.horizontal, contentHorizontalPadding)
 
-                // Provider results
-                ScrollView {
-                    VStack(spacing: 6) {
-                        ForEach(coordinator.activeSlots, id: \.id) { provider in
-                            if let state = coordinator.providerStates[provider.id] {
-                                ProviderResultCard(
-                                    provider: provider,
-                                    state: state,
-                                    isExpanded: expandedBinding(for: provider.id),
-                                    onRetry: {
-                                        coordinator.retryProvider(provider)
-                                    }
-                                )
+                // Provider results or history
+                if shouldShowHistory {
+                    HistoryListView(entries: historyEntries) { entry in
+                        editableText = entry.sourceText
+                        coordinator.translate(entry.sourceText)
+                    }
+                } else {
+                    ScrollView {
+                        VStack(spacing: 6) {
+                            ForEach(coordinator.activeSlots, id: \.id) { provider in
+                                if let state = coordinator.providerStates[provider.id] {
+                                    ProviderResultCard(
+                                        provider: provider,
+                                        state: state,
+                                        isExpanded: expandedBinding(for: provider.id),
+                                        onRetry: {
+                                            coordinator.retryProvider(provider)
+                                        }
+                                    )
+                                }
                             }
                         }
+                        .padding(.horizontal, contentHorizontalPadding)
+                        .padding(.vertical, 6)
                     }
-                    .padding(.horizontal, contentHorizontalPadding)
-                    .padding(.vertical, 6)
                 }
             }
         }

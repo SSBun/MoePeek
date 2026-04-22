@@ -9,11 +9,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     // SwiftUI evaluates MoePeekApp.body (which reads registry) during app init.
     lazy var registry = TranslationProviderRegistry.builtIn()
     var coordinator: TranslationCoordinator!
+    var historyManager: TranslationHistoryManager!
     var panelController: PopupPanelController!
     var permissionManager: PermissionManager!
     var onboardingController: OnboardingWindowController!
     var selectionMonitor: SelectionMonitor!
     var triggerIconController: TriggerIconController!
+    var toastController: ToastController!
     lazy var updaterController = UpdaterController()
 
     func applicationDidFinishLaunching(_: Notification) {
@@ -23,11 +25,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         migrateDefaults()
 
         permissionManager = PermissionManager()
+        historyManager = TranslationHistoryManager()
         coordinator = TranslationCoordinator(permissionManager: permissionManager, registry: registry)
-        panelController = PopupPanelController(coordinator: coordinator)
+        coordinator.historyManager = historyManager
+        panelController = PopupPanelController(coordinator: coordinator, historyManager: historyManager)
         onboardingController = OnboardingWindowController(permissionManager: permissionManager, registry: registry)
         selectionMonitor = SelectionMonitor()
         triggerIconController = TriggerIconController()
+        toastController = ToastController()
         // Apply dock visibility — always set explicitly because macOS may cache
         // .regular from a previous session, ignoring LSUIElement on relaunch.
         NSApp.setActivationPolicy(Defaults[.showInDock] ? .regular : .accessory)
@@ -190,6 +195,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             Task { @MainActor in
                 await self.coordinator.translateSelection()
                 if case .idle = self.coordinator.phase { return }
+                // If there's a global error (e.g., no text selected), show toast instead of panel
+                if let error = self.coordinator.globalError {
+                    self.toastController.show(message: error)
+                    self.coordinator.dismiss()
+                    return
+                }
                 self.panelController.showAtCursor()
             }
         }
@@ -199,6 +210,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             Task { @MainActor in
                 await self.coordinator.ocrAndTranslate()
                 if case .idle = self.coordinator.phase { return }
+                if let error = self.coordinator.globalError {
+                    self.toastController.show(message: error)
+                    self.coordinator.dismiss()
+                    return
+                }
                 self.panelController.showAtCursor()
             }
         }
@@ -215,6 +231,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             guard let self else { return }
             Task { @MainActor in
                 self.coordinator.translateClipboard()
+                if case .idle = self.coordinator.phase { return }
+                if let error = self.coordinator.globalError {
+                    self.toastController.show(message: error)
+                    self.coordinator.dismiss()
+                    return
+                }
                 self.panelController.showAtCursor()
             }
         }

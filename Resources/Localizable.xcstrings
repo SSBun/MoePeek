@@ -47,6 +47,7 @@
       }
     },
     "↵ Translate · ⇧↵ Newline" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -55,6 +56,12 @@
           }
         }
       }
+    },
+    "↵ Translate · ⇧↵ Newline · ⌘↵ Copy & Close" : {
+
+    },
+    "⌘%@" : {
+
     },
     "About" : {
       "extractionState" : "stale",
@@ -224,6 +231,16 @@
         }
       }
     },
+    "Apps in the blocklist will not trigger automatic text selection detection." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "如果 App 在「排除应用」名单中，则不会触发鼠标自动划词。"
+          }
+        }
+      }
+    },
     "Are you sure you want to delete \"%@\"? This will remove all its settings." : {
       "localizations" : {
         "zh-Hans" : {
@@ -241,16 +258,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "自动"
-          }
-        }
-      }
-    },
-    "Apps in the blocklist will not trigger automatic text selection detection." : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "如果 App 在「排除应用」名单中，则不会触发鼠标自动划词。"
           }
         }
       }
@@ -1260,6 +1267,9 @@
           }
         }
       }
+    },
+    "No translation history yet" : {
+
     },
     "Not checked" : {
       "extractionState" : "stale",

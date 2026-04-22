@@ -71,6 +71,7 @@ extension KeyboardShortcuts.Name {
 extension Defaults.Keys {
     static let targetLanguage = Key<String>("targetLanguage", default: "zh-Hans")
     static let sourceLanguage = Key<String>("sourceLanguage", default: "auto")
+    static let capitalizeFirstLetter = Key<Bool>("capitalizeFirstLetter", default: true)
 
     // Enabled translation providers
     static let enabledProviders = Key<Set<String>>("enabledProviders", default: ["openai"])
@@ -104,6 +105,9 @@ extension Defaults.Keys {
 
     // Settings tab selection
     static let selectedSettingsTab = Key<SettingsTab>("selectedSettingsTab", default: .general)
+
+    // Translation history
+    static let translationHistory = Key<[TranslationHistoryEntry]>("translationHistory", default: [])
 
     // Custom providers
     static let customProviders = Key<[CustomProviderDefinition]>("customProviders", default: [])
