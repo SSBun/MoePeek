@@ -114,4 +114,5 @@ extension Defaults.Keys {
 
     // App language override
     static let appLanguage = Key<AppLanguage>("appLanguage", default: .system)
+    static let defaultInputSource = Key<String>("defaultInputSource", default: "")
 }

@@ -15,6 +15,7 @@ struct GeneralSettingsView: View {
     @Default(.sourceLanguage) private var sourceLanguage
     @Default(.detectionConfidenceThreshold) private var confidenceThreshold
     @Default(.appLanguage) private var appLanguage
+    @Default(.defaultInputSource) private var defaultInputSource
     @Default(.capitalizeFirstLetter) private var capitalizeFirstLetter
 
     private var textDetectionModeDescription: String {
@@ -31,6 +32,7 @@ struct GeneralSettingsView: View {
     @State private var launchAtLogin = SMAppService.mainApp.status == .enabled
     @State private var showRestartAlert = false
     @State private var availableFonts = NSFontManager.shared.availableFontFamilies
+    @State private var availableInputSources: [KeyboardInputSource] = []
 
     var body: some View {
         Form {
@@ -77,6 +79,14 @@ struct GeneralSettingsView: View {
                             NSApp.activate()
                         }
                     }
+
+                Picker("Default Input Method:", selection: $defaultInputSource) {
+                    Text("System Default").tag("")
+                    Divider()
+                    ForEach(availableInputSources) { source in
+                        Text(source.name).tag(source.id)
+                    }
+                }
             }
 
             Section("Translation") {
@@ -169,11 +179,31 @@ struct GeneralSettingsView: View {
         }
         .formStyle(.grouped)
         .padding()
+        .onAppear {
+            availableInputSources = KeyboardInputSource.availableSources()
+        }
         .alert("App Language", isPresented: $showRestartAlert) {
             Button("Restart Now") { AppRelaunch.relaunch() }
             Button("Later", role: .cancel) { }
         } message: {
             Text("Changing language requires restarting the app.")
+        }
+    }
+}
+
+private struct KeyboardInputSource: Identifiable {
+    let id: String
+    let name: String
+
+    @MainActor
+    static func availableSources() -> [KeyboardInputSource] {
+        let textView = NSTextView()
+        let sources = textView.inputContext?.keyboardInputSources ?? []
+        return sources.map {
+            KeyboardInputSource(
+                id: $0,
+                name: NSTextInputContext.localizedName(forInputSource: $0) ?? $0
+            )
         }
     }
 }

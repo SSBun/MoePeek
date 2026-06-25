@@ -36,6 +36,7 @@ private struct SourceTextEditor: NSViewRepresentable {
     let fontSize: CGFloat
     let fontName: String
     let onSubmit: () -> Void
+    @Default(.defaultInputSource) private var defaultInputSource
 
     private var resolvedFont: NSFont {
         .popup(name: fontName, size: fontSize)
@@ -91,6 +92,7 @@ private struct SourceTextEditor: NSViewRepresentable {
         DispatchQueue.main.async {
             guard let window = textView.window else { return }
             window.makeFirstResponder(textView)
+            textView.applyInputSource(defaultInputSource)
         }
 
         return scrollView
@@ -113,6 +115,7 @@ private struct SourceTextEditor: NSViewRepresentable {
             DispatchQueue.main.async {
                 guard let window = textView.window else { return }
                 window.makeFirstResponder(textView)
+                textView.applyInputSource(defaultInputSource)
             }
         }
     }
@@ -224,5 +227,13 @@ private final class SubmitAwareTextView: NSTextView {
         setNeedsDisplay(bounds)
         enclosingScrollView?.contentView.needsDisplay = true
         enclosingScrollView?.needsDisplay = true
+    }
+
+    func applyInputSource(_ inputSource: String) {
+        guard !inputSource.isEmpty,
+              let inputContext,
+              inputContext.keyboardInputSources?.contains(inputSource) == true
+        else { return }
+        inputContext.selectedKeyboardInputSource = inputSource
     }
 }
