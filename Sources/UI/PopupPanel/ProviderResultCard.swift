@@ -5,6 +5,7 @@ import SwiftUI
 struct ProviderResultCard: View {
     let provider: any TranslationProvider
     let state: TranslationCoordinator.ProviderState
+    let shortcutIndex: Int?
     @Binding var isExpanded: Bool
     var onRetry: (() -> Void)?
     @Default(.popupFontSize) private var fontSize
@@ -39,6 +40,7 @@ struct ProviderResultCard: View {
 
                     Spacer()
 
+                    shortcutBadge
                     statusIndicator
                 }
                 .padding(.horizontal, 8)
@@ -67,6 +69,20 @@ struct ProviderResultCard: View {
     }
 
     // MARK: - Status Indicator
+
+    @ViewBuilder
+    private var shortcutBadge: some View {
+        if case .completed = state, let shortcutIndex {
+            Text("⌘\(shortcutIndex)")
+                .font(.popup(name: fontName, size: CGFloat(fontSize - 4)))
+                .foregroundStyle(.secondary)
+                .padding(.horizontal, 5)
+                .padding(.vertical, 2)
+                .background(Color.primary.opacity(0.08))
+                .clipShape(RoundedRectangle(cornerRadius: 4))
+                .help("Copy result and close")
+        }
+    }
 
     @ViewBuilder
     private var statusIndicator: some View {

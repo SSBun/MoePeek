@@ -36,12 +36,25 @@ struct PopupView: View {
         max(containerHeight - 120, inputMinHeight + 24)
     }
 
-    /// Finds the first completed translation text from the coordinator.
-    var firstCompletedTranslation: String? {
-        for slot in coordinator.activeSlots {
+    /// Completed translation texts in the current provider order.
+    var completedTranslations: [String] {
+        coordinator.activeSlots.compactMap { slot in
             if case .completed(let text) = coordinator.providerStates[slot.id] {
                 return text
             }
+            return nil
+        }
+    }
+
+    var firstCompletedTranslation: String? {
+        completedTranslations.first
+    }
+
+    private func completedTranslation(atResultIndex index: Int) -> String? {
+        guard coordinator.activeSlots.indices.contains(index) else { return nil }
+        let slot = coordinator.activeSlots[index]
+        if case .completed(let text) = coordinator.providerStates[slot.id] {
+            return text
         }
         return nil
     }
@@ -95,32 +108,36 @@ struct PopupView: View {
             sourceLang = Defaults[.sourceLanguage]
             targetLang = coordinator.targetLanguage
             expandedProviders = Set(coordinator.activeSlots.map(\.id))
-            historyEntries = historyManager?.entries ?? []
+            historyEntries = Array((historyManager?.entries ?? []).prefix(9))
         }
         .onChange(of: coordinator.translationGeneration) { _, _ in
             expandedProviders = Set(coordinator.activeSlots.map(\.id))
         }
         .onAppear {
-            // Monitor for ⌘+Enter (copy & close) and ⌘+1..9 (history shortcut)
+            // Monitor for ⌘+Enter (copy & close), ⌘+1..9 (result copy or history shortcut)
             let monitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
                 let flags = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
 
                 // ⌘+Enter: copy first result and close
                 if event.keyCode == 36, flags == .command {
-                    Task { @MainActor [onCopyFirstAndDismiss = self.onCopyFirstAndDismiss, firstCompletedTranslation = self.firstCompletedTranslation, capitalizeFirstLetter = self.capitalizeFirstLetter] in
-                        if let text = firstCompletedTranslation {
-                            let formattedText = TextFormatter.format(text, capitalizeFirstLetter: capitalizeFirstLetter)
-                            NSPasteboard.general.clearContents()
-                            NSPasteboard.general.setString(formattedText, forType: .string)
-                            onCopyFirstAndDismiss?()
-                        }
+                    Task { @MainActor [text = self.firstCompletedTranslation] in
+                        guard let text else { return }
+                        self.copyAndDismiss(text)
                     }
                     return nil
                 }
 
-                // ⌘+1..9: select history entry for retranslation
+                // ⌘+1..9: copy result by index, or select history entry for retranslation
                 if flags == .command, let chars = event.characters, let digit = chars.first, digit.isNumber, digit != "0" {
                     let idx = digit.wholeNumberValue! - 1
+                    if !self.shouldShowHistory {
+                        guard let text = self.completedTranslation(atResultIndex: idx) else { return nil }
+                        Task { @MainActor in
+                            self.copyAndDismiss(text)
+                        }
+                        return nil
+                    }
+
                     let entries = self.historyEntries
                     guard idx < entries.count else { return nil }
                     let entry = entries[idx]
@@ -263,11 +280,12 @@ struct PopupView: View {
                 } else {
                     ScrollView {
                         VStack(spacing: 6) {
-                            ForEach(coordinator.activeSlots, id: \.id) { provider in
+                            ForEach(Array(coordinator.activeSlots.enumerated()), id: \.element.id) { index, provider in
                                 if let state = coordinator.providerStates[provider.id] {
                                     ProviderResultCard(
                                         provider: provider,
                                         state: state,
+                                        shortcutIndex: index < 9 ? index + 1 : nil,
                                         isExpanded: expandedBinding(for: provider.id),
                                         onRetry: {
                                             coordinator.retryProvider(provider)
@@ -298,6 +316,14 @@ struct PopupView: View {
                 }
             }
         )
+    }
+
+    @MainActor
+    private func copyAndDismiss(_ text: String) {
+        let formattedText = TextFormatter.format(text, capitalizeFirstLetter: capitalizeFirstLetter)
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.setString(formattedText, forType: .string)
+        onCopyFirstAndDismiss?()
     }
 
     @MainActor
