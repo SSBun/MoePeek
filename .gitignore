@@ -8,6 +8,7 @@ Derived/
 xcuserdata/
 DerivedData/
 build/
+disk/
 
 # Signing (local xcconfig with personal identity)
 Configurations/Signing.xcconfig
