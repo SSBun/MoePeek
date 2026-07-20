@@ -1,3 +1,8 @@
+# 使用本地 Apple Development 证书签名
+
+- 状态：已完成（2026-07-20）
+- 记录：[任务详情](todo/local-development-signing.md)
+
 # 发布 MoePeek 0.13.0
 
 - 状态：进行中（2026-07-20）
