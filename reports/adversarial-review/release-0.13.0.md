@@ -3,8 +3,8 @@
 ## Overall conclusion
 
 - Result: APPROVED
-- Core conclusion: 用户已确认 `SSBun/MoePeek` 为 canonical 发布仓库，所有项目与发布链接已迁移；最终本地代码、文档与 `0.13.0 (2)` 工件获批提交。
-- Remaining risk: 本地 App 为 ad-hoc 签名且未 notarize；远端签名 secrets 尚未配置，本结论不批准 tag、push 或 Release。
+- Core conclusion: RE-REVIEW（3）批准的本地范围已提交；新增 `AGENTS.md` 与无 Sparkle appcast 的发布流程在 RE-REVIEW（4）获批提交。
+- Remaining risk: 0.13.0 不通过 Sparkle 自动更新分发；本地 App 为 ad-hoc 签名且未 notarize；远端四个代码签名 secrets 尚未配置。
 
 ## Topics reviewed
 
@@ -96,8 +96,8 @@
 - Review state: APPROVED
 - Stop reason: approved
 - Reviewer: `release-0-13-0-reviewer`
-- Current round: RE-REVIEW (3)
-- Updated: 2026-07-20 20:16:00 +0800
+- Current round: RE-REVIEW (4)
+- Updated: 2026-07-20 21:36:00 +0800
 
 ### Reviewed scope
 
@@ -105,6 +105,7 @@
 - Base or revision: `origin/main` (`d3064b2`) 到当前 `HEAD` (`5c711a5`) 加工作区变更
 - Artifacts: `origin/main..HEAD` 的 3 个本地提交、当前 tracked/untracked 项目文件、`build/app/MoePeek.app`、`disk/MoePeek-v0.13.0-2026-07-20.dmg`
 - Fingerprint: SHA-256 `227309b8886c3ea822ffd26eaa08226828a0f5ea0386d0307b6891a16cbf83d5`（排除 `tasks/` 与 `reports/` 管理记录）
+- Follow-up fingerprint: SHA-256 `f13a094f7deb15b3cc9b94836389cdd6c8423b15ab27c5fbf0b00fdaeadbef71`（`a605fc5` 后新增修订，排除 `tasks/` 与 `reports/` 管理记录）
 - Non-goals: 安装到 `/Applications`、Developer ID 签名、notarization、远端 tag/push/Release
 
 ### Round history
@@ -114,6 +115,7 @@
 | INITIAL (1) | CONTINUE | R1–R6 | none | R1–R6 |
 | RE-REVIEW (2) | NEEDS_USER | none | R1–R3, R5–R6 | R4 |
 | RE-REVIEW (3) | APPROVED | none | R4 | none |
+| RE-REVIEW (4) | APPROVED | none | follow-up | none |
 
 ### Unresolved items
 

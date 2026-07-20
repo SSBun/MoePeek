@@ -48,7 +48,6 @@ jobs:
           MOEPEEK_CODE_SIGN_STYLE = Manual
           MOEPEEK_CODE_SIGN_IDENTITY = ${{ secrets.SIGNING_IDENTITY }}
           MOEPEEK_DEVELOPMENT_TEAM = ${{ secrets.DEVELOPMENT_TEAM }}
-          SPARKLE_ED_PUBLIC_KEY = ${{ secrets.SPARKLE_ED_PUBLIC_KEY }}
           EOF
 
       - name: Resolve dependencies and generate project
@@ -104,23 +103,6 @@ jobs:
             PopClipExtension/MoePeek.popclipext \
             "MoePeek.popclipext.zip"
 
-      - name: Check Sparkle signing key
-        id: sparkle
-        run: |
-          if [ -n "$SPARKLE_KEY" ]; then
-            echo "has_key=true" >> "$GITHUB_OUTPUT"
-          fi
-        env:
-          SPARKLE_KEY: ${{ secrets.SPARKLE_ED_PRIVATE_KEY }}
-
-      - name: Download Sparkle CLI tools
-        if: steps.sparkle.outputs.has_key == 'true'
-        run: |
-          SPARKLE_VERSION=$(python3 -c "import json; pins=json.load(open('Package.resolved'))['pins']; print(next(p['state']['version'] for p in pins if p['identity']=='sparkle'))")
-          echo "Using Sparkle CLI v${SPARKLE_VERSION} (from Package.resolved)"
-          mkdir -p /tmp/sparkle
-          curl -sL "https://github.com/sparkle-project/Sparkle/releases/download/${SPARKLE_VERSION}/Sparkle-${SPARKLE_VERSION}.tar.xz" | tar xJ -C /tmp/sparkle
-
       - name: Create DMG
         run: |
           DMG="MoePeek-v${{ steps.version.outputs.version }}-macOS.dmg"
@@ -138,25 +120,6 @@ jobs:
           hdiutil verify "$DMG"
           shasum -a 256 "$DMG"
 
-      - name: Generate appcast
-        if: steps.sparkle.outputs.has_key == 'true'
-        env:
-          SPARKLE_ED_PRIVATE_KEY: ${{ secrets.SPARKLE_ED_PRIVATE_KEY }}
-        run: |
-          mkdir -p build/release
-          cp "MoePeek-v${{ steps.version.outputs.version }}-macOS.zip" build/release/
-
-          # Download existing appcast to preserve history (skip if first release or invalid)
-          curl -sfL "https://github.com/SSBun/MoePeek/releases/latest/download/appcast.xml" \
-            -o appcast.xml || rm -f appcast.xml
-
-          DOWNLOAD_URL="https://github.com/SSBun/MoePeek/releases/download/v${{ steps.version.outputs.version }}"
-          /tmp/sparkle/bin/generate_appcast \
-            --ed-key-file <(echo "$SPARKLE_ED_PRIVATE_KEY") \
-            --download-url-prefix "$DOWNLOAD_URL/" \
-            -o appcast.xml \
-            build/release/
-
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
@@ -168,4 +131,3 @@ jobs:
             MoePeek-v${{ steps.version.outputs.version }}-macOS.zip
             MoePeek-v${{ steps.version.outputs.version }}-macOS.dmg
             MoePeek.popclipext.zip
-            appcast.xml
