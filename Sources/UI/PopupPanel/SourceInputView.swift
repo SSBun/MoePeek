@@ -89,11 +89,8 @@ private struct SourceTextEditor: NSViewRepresentable {
         scrollView.documentView = textView
         context.coordinator.textView = textView
 
-        DispatchQueue.main.async {
-            guard let window = textView.window else { return }
-            window.makeFirstResponder(textView)
-            textView.applyInputSource(defaultInputSource)
-        }
+        textView.initialInputSource = defaultInputSource
+        textView.focusInitially()
 
         return scrollView
     }
@@ -109,21 +106,13 @@ private struct SourceTextEditor: NSViewRepresentable {
         }
 
         textView.onSubmit = onSubmit
-
-        if !context.coordinator.didFocusInitially {
-            context.coordinator.didFocusInitially = true
-            DispatchQueue.main.async {
-                guard let window = textView.window else { return }
-                window.makeFirstResponder(textView)
-                textView.applyInputSource(defaultInputSource)
-            }
-        }
+        textView.initialInputSource = defaultInputSource
+        textView.focusInitially()
     }
 
     final class Coordinator: NSObject, NSTextViewDelegate {
         @Binding var text: String
         weak var textView: SubmitAwareTextView?
-        var didFocusInitially = false
 
         init(text: Binding<String>) {
             _text = text
@@ -139,7 +128,22 @@ private struct SourceTextEditor: NSViewRepresentable {
 
 private final class SubmitAwareTextView: NSTextView {
     var onSubmit: (() -> Void)?
+    var initialInputSource = ""
     private var displayFont: NSFont = .systemFont(ofSize: NSFont.systemFontSize)
+    private var didFocusInitially = false
+
+    override func viewDidMoveToWindow() {
+        super.viewDidMoveToWindow()
+        focusInitially()
+    }
+
+    func focusInitially() {
+        guard !didFocusInitially, let window else { return }
+        window.initialFirstResponder = self
+        guard window.makeFirstResponder(self) else { return }
+        didFocusInitially = true
+        applyInputSource(initialInputSource)
+    }
 
     func applyDisplayAttributes(font: NSFont) {
         displayFont = font

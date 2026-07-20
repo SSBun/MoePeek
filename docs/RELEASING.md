@@ -74,7 +74,7 @@ CI 会自动完成以下步骤：
 
 1. 应用的 `Info.plist` 中 `SUFeedURL` 指向：
    ```
-   https://github.com/cosZone/MoePeek/releases/latest/download/appcast.xml
+   https://github.com/SSBun/MoePeek/releases/latest/download/appcast.xml
    ```
 2. GitHub 的 `releases/latest/download/{asset}` 会重定向到最新 **非 draft** release 的资源文件
 3. Sparkle 拉取 `appcast.xml`，比对版本号，如有更新则提示用户

@@ -27,7 +27,7 @@ let project = Project(
                 "CFBundleDevelopmentRegion": "en",
                 "CFBundleShortVersionString": "$(MARKETING_VERSION)",
                 "CFBundleVersion": "$(CURRENT_PROJECT_VERSION)",
-                "SUFeedURL": "https://github.com/cosZone/MoePeek/releases/latest/download/appcast.xml",
+                "SUFeedURL": "https://github.com/SSBun/MoePeek/releases/latest/download/appcast.xml",
                 "SUPublicEDKey": "$(SPARKLE_ED_PUBLIC_KEY)",
                 "CFBundleURLTypes": [
                     [
@@ -49,14 +49,24 @@ let project = Project(
                     "CODE_SIGN_STYLE": "$(MOEPEEK_CODE_SIGN_STYLE)",
                     "CODE_SIGN_IDENTITY": "$(MOEPEEK_CODE_SIGN_IDENTITY)",
                     "DEVELOPMENT_TEAM": "$(MOEPEEK_DEVELOPMENT_TEAM)",
-                    "MARKETING_VERSION": "0.12.1",
-                    "CURRENT_PROJECT_VERSION": "1",
+                    "MARKETING_VERSION": "0.13.0",
+                    "CURRENT_PROJECT_VERSION": "2",
                 ],
                 configurations: [
                     .debug(name: "Debug", xcconfig: "Configurations/Signing.xcconfig"),
                     .release(name: "Release", xcconfig: "Configurations/Signing.xcconfig"),
                 ]
             )
+        ),
+        .target(
+            name: "MoePeekTests",
+            destinations: .macOS,
+            product: .unitTests,
+            bundleId: "com.nahida.MoePeekTests",
+            deploymentTargets: .macOS("14.0"),
+            infoPlist: .default,
+            sources: ["Tests/**"],
+            dependencies: [.target(name: "MoePeek")]
         ),
     ]
 )

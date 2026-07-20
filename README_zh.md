@@ -13,8 +13,8 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/cosZone/MoePeek/releases/latest"><img src="https://img.shields.io/github/v/release/cosZone/MoePeek" alt="GitHub Release" /></a>
-  <a href="https://github.com/cosZone/MoePeek/releases"><img src="https://img.shields.io/github/downloads/cosZone/MoePeek/total" alt="Downloads" /></a>
+  <a href="https://github.com/SSBun/MoePeek/releases/latest"><img src="https://img.shields.io/github/v/release/SSBun/MoePeek" alt="GitHub Release" /></a>
+  <a href="https://github.com/SSBun/MoePeek/releases"><img src="https://img.shields.io/github/downloads/SSBun/MoePeek/total" alt="Downloads" /></a>
   <img src="https://img.shields.io/badge/platform-macOS%2014%2B-blue" alt="Platform" />
   <img src="https://img.shields.io/badge/swift-6.0-orange" alt="Swift" />
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-AGPL--3.0-green" alt="License" /></a>
@@ -43,6 +43,7 @@
 | 有道翻译 | 小牛翻译 | DeepSeek | |
 | | 彩云小译 | OpenRouter | |
 | | DeepLX | 智谱 GLM | |
+| | | Codex *（实验性）* | |
 | | | Ollama（本地） | |
 | | | LM Studio（本地） | |
 
@@ -72,7 +73,7 @@ MoePeek 是一个纯 **AI vibe coding** 的自用项目。它能满足我个人�
 
 ## 安装
 
-从 [GitHub Releases](https://github.com/cosZone/MoePeek/releases) 下载最新的 `.dmg` 或 `.zip`，将 `MoePeek.app` 拖入 `/Applications`。
+从 [GitHub Releases](https://github.com/SSBun/MoePeek/releases) 下载最新的 `.dmg` 或 `.zip`，将 `MoePeek.app` 拖入 `/Applications`。
 
 ## 使用
 
@@ -99,7 +100,7 @@ MoePeek 是一个纯 **AI vibe coding** 的自用项目。它能满足我个人�
 **安装扩展：**
 
 1. 确保 MoePeek 已安装并正在运行。
-2. 从最新 Release 下载 [`MoePeek.popclipext.zip`](https://github.com/cosZone/MoePeek/releases/latest/download/MoePeek.popclipext.zip) 并解压。
+2. 从最新 Release 下载 [`MoePeek.popclipext.zip`](https://github.com/SSBun/MoePeek/releases/latest/download/MoePeek.popclipext.zip) 并解压。
 3. 双击 `MoePeek.popclipext`，PopClip 会自动完成安装。
 4. 在任意应用中选中文字 → 点击 PopClip 栏中的 **MoePeek** 图标即可翻译。
 
@@ -147,8 +148,8 @@ MoePeek 的诞生受到了 [Easydict](https://github.com/tisfeng/Easydict) 和 [
 
 ## 贡献者
 
-<a href="https://github.com/cosZone/MoePeek/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=cosZone/MoePeek" />
+<a href="https://github.com/SSBun/MoePeek/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=SSBun/MoePeek" />
 </a>
 
 ## 赞助
@@ -157,7 +158,7 @@ MoePeek 的诞生受到了 [Easydict](https://github.com/tisfeng/Easydict) 和 [
 
 ## Star History
 
-[![Star History Chart](https://api.star-history.com/svg?repos=cosZone/MoePeek&type=date&legend=top-left)](https://www.star-history.com/#cosZone/MoePeek&type=date&legend=top-left)
+[![Star History Chart](https://api.star-history.com/svg?repos=SSBun/MoePeek&type=date&legend=top-left)](https://www.star-history.com/#SSBun/MoePeek&type=date&legend=top-left)
 
 ## 许可证
 

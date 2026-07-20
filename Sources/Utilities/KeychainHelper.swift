@@ -4,8 +4,10 @@ import Security
 enum KeychainHelper {
     private static let service = "com.nahida.MoePeek"
 
-    static func save(key: String, value: String) {
-        guard let data = value.data(using: .utf8) else { return }
+    /// Saves a string without deleting an existing value before its replacement is ready.
+    @discardableResult
+    static func save(key: String, value: String) -> Bool {
+        guard let data = value.data(using: .utf8) else { return false }
 
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
@@ -13,13 +15,16 @@ enum KeychainHelper {
             kSecAttrAccount as String: key,
         ]
 
-        // Delete existing item first
-        SecItemDelete(query as CFDictionary)
+        let updateStatus = SecItemUpdate(
+            query as CFDictionary,
+            [kSecValueData as String: data] as CFDictionary
+        )
+        if updateStatus == errSecSuccess { return true }
+        guard updateStatus == errSecItemNotFound else { return false }
 
         var addQuery = query
         addQuery[kSecValueData as String] = data
-
-        SecItemAdd(addQuery as CFDictionary, nil)
+        return SecItemAdd(addQuery as CFDictionary, nil) == errSecSuccess
     }
 
     static func load(key: String) -> String? {

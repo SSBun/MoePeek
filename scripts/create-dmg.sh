@@ -35,11 +35,13 @@ xcodebuild archive \
     VALIDATE_STRINGS_FILES_WHILE_COPYING=NO
 
 echo "==> Preparing app bundle"
+rm -rf "$APP_PATH"
 mkdir -p "$APP_PATH"
-cp -R "$ARCHIVE_PATH/Products/Applications/${APP_NAME}.app" "$APP_PATH/"
+ditto "$ARCHIVE_PATH/Products/Applications/${APP_NAME}.app" "$APP_PATH/${APP_NAME}.app"
 
 echo "==> Creating DMG"
 mkdir -p "$DISK_DIR"
+rm -f "$DMG_PATH"
 
 if command -v create-dmg &>/dev/null; then
     create-dmg \
@@ -51,11 +53,14 @@ if command -v create-dmg &>/dev/null; then
         --app-drop-link 480 170 \
         --hide-extension "${APP_NAME}.app" \
         "$DMG_PATH" \
-        "$APP_PATH/" \
-        || true
+        "$APP_PATH/"
 else
     echo "create-dmg not found. Install with: brew install create-dmg"
     exit 1
 fi
+
+[[ -f "$DMG_PATH" ]] || { echo "DMG was not created: $DMG_PATH"; exit 1; }
+hdiutil verify "$DMG_PATH"
+shasum -a 256 "$DMG_PATH"
 
 echo "==> Done: $DMG_PATH"

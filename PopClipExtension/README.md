@@ -1,10 +1,10 @@
 # MoePeek PopClip Extension
 
-Translate selected text instantly with [MoePeek](https://github.com/cosZone/MoePeek) via PopClip.
+Translate selected text instantly with [MoePeek](https://github.com/SSBun/MoePeek) via PopClip.
 
 ## Requirements
 
-- [MoePeek](https://github.com/cosZone/MoePeek) v0.8.0 or later
+- [MoePeek](https://github.com/SSBun/MoePeek) v0.8.0 or later
 - [PopClip](https://www.popclip.app/) (Mac App Store)
 - macOS 14.0+
 

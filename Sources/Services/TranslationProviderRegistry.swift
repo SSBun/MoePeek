@@ -128,6 +128,7 @@ final class TranslationProviderRegistry {
                 defaultModel: "gpt-4o-mini",
                 guideURL: "https://platform.openai.com/api-keys"
             ),
+            CodexProvider(),
             OpenAICompatibleProvider(
                 id: "deepseek",
                 displayName: "DeepSeek",
@@ -155,7 +156,7 @@ final class TranslationProviderRegistry {
                 defaultModel: "openrouter/auto",
                 guideURL: "https://openrouter.ai/keys",
                 extraHeaders: [
-                    "HTTP-Referer": "https://github.com/cosZone/MoePeek",
+                    "HTTP-Referer": "https://github.com/SSBun/MoePeek",
                     "X-OpenRouter-Title": "MoePeek",
                 ]
             ),

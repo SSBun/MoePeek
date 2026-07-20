@@ -13,8 +13,8 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/cosZone/MoePeek/releases/latest"><img src="https://img.shields.io/github/v/release/cosZone/MoePeek" alt="GitHub Release" /></a>
-  <a href="https://github.com/cosZone/MoePeek/releases"><img src="https://img.shields.io/github/downloads/cosZone/MoePeek/total" alt="Downloads" /></a>
+  <a href="https://github.com/SSBun/MoePeek/releases/latest"><img src="https://img.shields.io/github/v/release/SSBun/MoePeek" alt="GitHub Release" /></a>
+  <a href="https://github.com/SSBun/MoePeek/releases"><img src="https://img.shields.io/github/downloads/SSBun/MoePeek/total" alt="Downloads" /></a>
   <img src="https://img.shields.io/badge/platform-macOS%2014%2B-blue" alt="Platform" />
   <img src="https://img.shields.io/badge/swift-6.0-orange" alt="Swift" />
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-AGPL--3.0-green" alt="License" /></a>
@@ -42,6 +42,7 @@
 | Youdao Translate | NiuTrans | DeepSeek | |
 | | Caiyun | OpenRouter | |
 | | DeepLX | 智谱 GLM | |
+| | | Codex *(Experimental)* | |
 | | | Ollama (local) | |
 | | | LM Studio (local) | |
 
@@ -71,7 +72,7 @@ If you need a more robust solution, these apps are excellent:
 
 ## Installation
 
-Download the latest `.dmg` or `.zip` from [GitHub Releases](https://github.com/cosZone/MoePeek/releases) and drag `MoePeek.app` into `/Applications`.
+Download the latest `.dmg` or `.zip` from [GitHub Releases](https://github.com/SSBun/MoePeek/releases) and drag `MoePeek.app` into `/Applications`.
 
 ## Usage
 
@@ -98,7 +99,7 @@ If you use [PopClip](https://www.popclip.app/), you can translate selected text 
 **Install the extension:**
 
 1. Make sure MoePeek is installed and running.
-2. Download [`MoePeek.popclipext.zip`](https://github.com/cosZone/MoePeek/releases/latest/download/MoePeek.popclipext.zip) from the latest release and unzip it.
+2. Download [`MoePeek.popclipext.zip`](https://github.com/SSBun/MoePeek/releases/latest/download/MoePeek.popclipext.zip) from the latest release and unzip it.
 3. Double-click `MoePeek.popclipext` — PopClip will install it automatically.
 4. Select any text in any app → click the **MoePeek** icon in the PopClip bar.
 
@@ -146,8 +147,8 @@ Built with:
 
 ## Contributors
 
-<a href="https://github.com/cosZone/MoePeek/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=cosZone/MoePeek" />
+<a href="https://github.com/SSBun/MoePeek/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=SSBun/MoePeek" />
 </a>
 
 ## Sponsor
@@ -156,7 +157,7 @@ Built with:
 
 ## Star History
 
-[![Star History Chart](https://api.star-history.com/svg?repos=cosZone/MoePeek&type=date&legend=top-left)](https://www.star-history.com/#cosZone/MoePeek&type=date&legend=top-left)
+[![Star History Chart](https://api.star-history.com/svg?repos=SSBun/MoePeek&type=date&legend=top-left)](https://www.star-history.com/#SSBun/MoePeek&type=date&legend=top-left)
 
 ## License
 

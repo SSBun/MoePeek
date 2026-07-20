@@ -51,12 +51,23 @@ struct PopupView: View {
     }
 
     private func completedTranslation(atResultIndex index: Int) -> String? {
-        guard coordinator.activeSlots.indices.contains(index) else { return nil }
-        let slot = coordinator.activeSlots[index]
-        if case .completed(let text) = coordinator.providerStates[slot.id] {
-            return text
-        }
-        return nil
+        Self.completedTranslation(
+            atResultIndex: index,
+            slotIDs: coordinator.activeSlots.map(\.id),
+            providerStates: coordinator.providerStates
+        )
+    }
+
+    /// Returns the completed translation assigned to a visible result shortcut index.
+    static func completedTranslation(
+        atResultIndex index: Int,
+        slotIDs: [String],
+        providerStates: [String: TranslationCoordinator.ProviderState]
+    ) -> String? {
+        guard slotIDs.indices.contains(index),
+              case .completed(let text) = providerStates[slotIDs[index]]
+        else { return nil }
+        return text
     }
 
     var body: some View {
