@@ -2,9 +2,9 @@
 
 ## Overall conclusion
 
-- Result: APPROVED
-- Core conclusion: RE-REVIEW（3）批准的本地范围已提交；新增 `AGENTS.md` 与无 Sparkle appcast 的发布流程在 RE-REVIEW（4）获批提交。
-- Remaining risk: 0.13.0 不通过 Sparkle 自动更新分发；本地 App 为 ad-hoc 签名且未 notarize；远端四个代码签名 secrets 尚未配置。
+- Result: READY
+- Core conclusion: Apple Development 签名的 `0.13.0 (2)` App 与 DMG 已生成、验证、打开并获批作为本地构建结果使用。
+- Remaining risk: 未安装到 `/Applications`；未使用 Developer ID Application 签名、未 notarize；不通过 Sparkle 自动更新分发。
 
 ## Topics reviewed
 
@@ -83,8 +83,9 @@
 - `xcodebuild test -workspace MoePeek.xcworkspace -scheme MoePeek -configuration Debug` — 9 个测试、0 失败。
 - `scripts/create-dmg.sh 0.13.0` — Release archive 与 DMG 生成成功。
 - `hdiutil verify disk/MoePeek-v0.13.0-2026-07-20.dmg` — 通过。
-- `codesign --verify --deep --strict build/app/MoePeek.app` — 通过；签名为 ad-hoc，TeamIdentifier 未设置。
-- DMG SHA-256 — `e157b781de101cb97183420d9a0734650bb799b4525190dd54ee7ff1dfc7a22e`。
+- `codesign --verify --deep --strict build/app/MoePeek.app` — 通过；Authority 为 Apple Development，TeamIdentifier 为 `Z4PKY44Q98`。
+- DMG SHA-256 — `f2d959aaa49bb312737e5fb453d308097b00607f9354b83ab92859f14fc69191`。
+- `open disk/MoePeek-v0.13.0-2026-07-20.dmg` — 成功挂载到 `/Volumes/MoePeek`。
 - Limitations: 未执行 Developer ID 签名、Apple notarization、tag、push 或远端 Release。
 - Remote readiness: `SSBun/MoePeek` 的 `Prod` 环境存在但没有可见 secrets；workflow 要求 `SIGNING_CERTIFICATE_P12`、`SIGNING_CERTIFICATE_PASSWORD`、`SIGNING_IDENTITY`、`DEVELOPMENT_TEAM`、`SPARKLE_ED_PUBLIC_KEY`，Sparkle 私钥可选。
 
@@ -96,8 +97,8 @@
 - Review state: APPROVED
 - Stop reason: approved
 - Reviewer: `release-0-13-0-reviewer`
-- Current round: RE-REVIEW (4)
-- Updated: 2026-07-20 21:36:00 +0800
+- Current round: RE-REVIEW (5)
+- Updated: 2026-07-20 22:45:00 +0800
 
 ### Reviewed scope
 
@@ -116,6 +117,7 @@
 | RE-REVIEW (2) | NEEDS_USER | none | R1–R3, R5–R6 | R4 |
 | RE-REVIEW (3) | APPROVED | none | R4 | none |
 | RE-REVIEW (4) | APPROVED | none | follow-up | none |
+| RE-REVIEW (5) | APPROVED | none | 新 DMG 工件 | none |
 
 ### Unresolved items
 
