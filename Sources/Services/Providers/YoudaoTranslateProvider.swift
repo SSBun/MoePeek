@@ -141,6 +141,7 @@ struct YoudaoTranslateProvider: TranslationProvider {
         let result = decoded.translateResult
             .map { group in group.map(\.tgt).joined() }
             .joined(separator: "\n")
+            .trimmingCharacters(in: CharacterSet(charactersIn: ", \n"))
 
         guard !result.isEmpty else {
             throw TranslationError.emptyResult

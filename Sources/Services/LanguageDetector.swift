@@ -63,6 +63,13 @@ enum LanguageDetector {
             return DetectionResult(language: nil, confidence: 0, isReliable: false)
         }
 
+        // Hard override: NLLanguageRecognizer's statistical model overpowers hints for
+        // mixed CJK+Latin text (e.g. "选中所有checkbox" detects as English at 0.89).
+        // CJK characters are a deterministic signal — if present, the source is CJK.
+        if !isCJKLanguage(best.language), let cjkLang = dominantCJKLanguage(text) {
+            return DetectionResult(language: cjkLang, confidence: best.confidence, isReliable: true)
+        }
+
         // Use higher threshold for very short text
         let effectiveThreshold = text.count <= 5
             ? max(threshold, 0.5)
@@ -93,5 +100,29 @@ enum LanguageDetector {
         case .portuguese: return "pt-BR"
         default: return language.rawValue
         }
+    }
+
+    private static func isCJKLanguage(_ code: String) -> Bool {
+        code.hasPrefix("zh") || code == "ja" || code == "ko"
+    }
+
+    // ponytail: CJK ideographs credited to zh-Hans only; pure-kanji Japanese could
+    // lean Chinese — widen to a shared zh/ja bucket if reported
+    private static func dominantCJKLanguage(_ text: String) -> String? {
+        var hasIdeograph = false
+        var hasKana = false
+        var hasHangul = false
+        for scalar in text.unicodeScalars {
+            switch scalar.value {
+            case 0x4E00...0x9FFF: hasIdeograph = true
+            case 0x3040...0x309F, 0x30A0...0x30FF: hasKana = true
+            case 0xAC00...0xD7AF: hasHangul = true
+            default: break
+            }
+        }
+        if hasHangul { return "ko" }
+        if hasKana { return "ja" }
+        if hasIdeograph { return "zh-Hans" }
+        return nil
     }
 }

@@ -49,8 +49,8 @@ let project = Project(
                     "CODE_SIGN_STYLE": "$(MOEPEEK_CODE_SIGN_STYLE)",
                     "CODE_SIGN_IDENTITY": "$(MOEPEEK_CODE_SIGN_IDENTITY)",
                     "DEVELOPMENT_TEAM": "$(MOEPEEK_DEVELOPMENT_TEAM)",
-                    "MARKETING_VERSION": "0.13.0",
-                    "CURRENT_PROJECT_VERSION": "2",
+                    "MARKETING_VERSION": "0.14.0",
+                    "CURRENT_PROJECT_VERSION": "4",
                 ],
                 configurations: [
                     .debug(name: "Debug", xcconfig: "Configurations/Signing.xcconfig"),
