@@ -1,6 +1,242 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "Enable Accessibility to paste back." : {
+      "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "请授予辅助功能权限后再回填。" } } }
+    },
+    "Original input is unavailable." : {
+      "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "原输入框不可用，请从目标输入框重新打开。" } } }
+    },
+    "Cannot paste into secure input." : {
+      "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "不能回填到安全输入框。" } } }
+    },
+    "Original input is not editable." : {
+      "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "无法确认原输入框可编辑。" } } }
+    },
+    "Input focus changed. Paste stopped." : {
+      "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "输入目标已改变，已停止回填。" } } }
+    },
+    "Could not focus the original input." : {
+      "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "无法恢复原输入框焦点。" } } }
+    },
+    "Original app cannot paste automatically." : {
+      "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "原应用不支持自动粘贴。" } } }
+    },
+    "No English text to paste." : {
+      "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "当前没有可回填的英文正文。" } } }
+    },
+    "Could not copy the English result." : {
+      "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "无法复制英文正文。" } } }
+    },
+    "Clipboard changed. Paste stopped." : {
+      "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "剪贴板已改变，已停止回填。" } } }
+    },
+    "Paste was not confirmed. Check the input." : {
+      "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "无法确认粘贴，请检查原输入框。" } } }
+    },
+    "Press Return again to paste the English result back." : {
+      "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "再次按回车，将英文正文粘贴回原输入框。" } } }
+    },
+    "Disable Thinking" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "关闭思考"
+          }
+        }
+      }
+    },
+    "Applies to new DeepSeek translation and parsing requests. Otherwise, the model default is kept." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "启用后，新的 DeepSeek 翻译和解析请求将关闭思考；否则保持模型默认行为。"
+          }
+        }
+      }
+    },
+    "Parsing returned an invalid result format. Please submit again." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "解析结果格式无效，请再次提交。"
+          }
+        }
+      }
+    },
+    "Parsing" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "解析"
+          }
+        }
+      }
+    },
+    "Same as translation target (Default)" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "与翻译目标语言相同（默认）"
+          }
+        }
+      }
+    },
+    "Type or paste text, then press Return to parse." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "输入或粘贴内容，按回车解析。"
+          }
+        }
+      }
+    },
+    "Text to parse" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "待解析文本"
+          }
+        }
+      }
+    },
+    "Return parses; Return again pastes a ready result back. Shift-Return adds a line; Esc closes." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "回车解析；有当前结果后再次回车回填。Shift+回车换行，Esc 关闭。"
+          }
+        }
+      }
+    },
+    "Text Parsing:" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "文本解析："
+          }
+        }
+      }
+    },
+    "Parsing Provider" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "解析服务"
+          }
+        }
+      }
+    },
+    "Enabled LLMs (Default)" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已启用的 LLM（默认）"
+          }
+        }
+      }
+    },
+    "Unavailable Provider" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "服务不可用"
+          }
+        }
+      }
+    },
+    "Selected parsing provider is unavailable. Choose another provider." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "所选解析服务不可用，请重新选择。"
+          }
+        }
+      }
+    },
+    "Explanation Language" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "说明语言"
+          }
+        }
+      }
+    },
+    "Parse Text" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "文本解析"
+          }
+        }
+      }
+    },
+    "Parsing…" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "解析中…"
+          }
+        }
+      }
+    },
+    "This provider does not support parsing." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "此服务不支持语言解析。"
+          }
+        }
+      }
+    },
+    "Parsing requires an enabled LLM provider. Enable one in Settings." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "解析需要已启用的大语言模型服务，请在设置中启用。"
+          }
+        }
+      }
+    },
+    "Parsing returned empty result" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "解析结果为空"
+          }
+        }
+      }
+    },
+    "Chinese input becomes natural English; English input is analyzed directly. This setting only controls the explanation language." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "中文先转成自然英文并解析，英文直接解析；此设置仅控制讲解语言。"
+          }
+        }
+      }
+    },
     "(default)" : {
       "localizations" : {
         "zh-Hans" : {

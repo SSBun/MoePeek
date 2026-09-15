@@ -10,6 +10,7 @@ struct CodexProvider: ParallelModelProvider {
     let iconSystemName = "terminal"
     let iconAssetName: String? = "OpenAI"
     let supportsStreaming = true
+    let supportsParsing = true
     let isAvailable = true
 
     let modelKey = Defaults.Key<String>("provider_codex_model", default: "gpt-5.4-mini")
@@ -46,14 +47,27 @@ struct CodexProvider: ParallelModelProvider {
         to targetLang: String,
         model: String
     ) -> AsyncThrowingStream<String, Error> {
-        AsyncThrowingStream { continuation in
+        processStream(text, from: sourceLang, to: targetLang, mode: .translation, model: model)
+    }
+
+    func processStream(
+        _ text: String,
+        from sourceLang: String?,
+        to targetLang: String,
+        mode: TextProcessingMode,
+        model: String?
+    ) -> AsyncThrowingStream<String, Error> {
+        let model = model ?? Defaults[modelKey]
+        return AsyncThrowingStream { continuation in
             let task = Task {
                 do {
                     let credentials = try await CodexAuthManager.shared.validCredentials()
                     let request = try buildRequest(
                         text: text,
+                        sourceLang: sourceLang,
                         targetLang: targetLang,
                         model: model,
+                        mode: mode,
                         credentials: credentials
                     )
                     let (bytes, response) = try await translationURLSession.bytes(for: request)
@@ -74,16 +88,17 @@ struct CodexProvider: ParallelModelProvider {
 
     private func buildRequest(
         text: String,
+        sourceLang: String?,
         targetLang: String,
         model: String,
+        mode: TextProcessingMode,
         credentials: CodexCredentials
     ) throws -> URLRequest {
         guard let url = URL(string: "https://chatgpt.com/backend-api/codex/responses") else {
             throw TranslationError.invalidURL
         }
 
-        let prompt = Defaults[systemPromptKey]
-            .replacingOccurrences(of: "{targetLang}", with: targetLang)
+        let prompt = mode.systemPrompt(translationTemplate: Defaults[systemPromptKey], sourceLanguage: sourceLang, targetLanguage: targetLang)
         let body = CodexRequest(
             model: model,
             instructions: prompt,

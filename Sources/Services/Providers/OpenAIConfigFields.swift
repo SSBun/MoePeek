@@ -147,6 +147,10 @@ struct OpenAIConfigFields: View {
                 }
             }
 
+            if let key = provider.disableThinkingKey {
+                DeepSeekThinkingControl(key: key)
+            }
+
             ConnectionTestView(
                 connectionManager: connectionManager,
                 baseURL: baseURLText,
@@ -190,6 +194,24 @@ struct OpenAIConfigFields: View {
             if !compact {
                 await metaService.fetchIfNeeded()
             }
+        }
+    }
+}
+
+/// 动态绑定 DeepSeek 独立偏好，兼容完整设置与精简配置表单。
+struct DeepSeekThinkingControl: View {
+    @Default private var disableThinking: Bool
+
+    init(key: Defaults.Key<Bool>) {
+        _disableThinking = .init(key)
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Toggle("Disable Thinking", isOn: $disableThinking)
+            Text("Applies to new DeepSeek translation and parsing requests. Otherwise, the model default is kept.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
         }
     }
 }

@@ -10,6 +10,7 @@ struct OpenAICompatibleProvider: ParallelModelProvider {
     let iconAssetName: String?
     let isCustom: Bool
     let supportsStreaming = true
+    let supportsParsing = true
     let isAvailable = true
 
     /// Extra HTTP headers to add to all requests (e.g. OpenRouter's X-Title for app attribution).
@@ -24,6 +25,8 @@ struct OpenAICompatibleProvider: ParallelModelProvider {
     let enabledModelsKey: Defaults.Key<Set<String>>
     let systemPromptKey: Defaults.Key<String>
     let apiKeyKey: Defaults.Key<String>
+    /// 仅内置 DeepSeek 提供该覆盖选项；其它兼容服务不创建或发送思考参数。
+    let disableThinkingKey: Defaults.Key<Bool>?
     let guideURL: String?
 
     /// All UserDefaults suffixes used by this provider type.
@@ -35,6 +38,9 @@ struct OpenAICompatibleProvider: ParallelModelProvider {
     static func cleanupDefaults(for id: String) {
         for suffix in defaultsSuffixes {
             UserDefaults.standard.removeObject(forKey: "provider_\(id)_\(suffix)")
+        }
+        if id == "deepseek" {
+            UserDefaults.standard.removeObject(forKey: "provider_deepseek_disableThinking")
         }
     }
 
@@ -63,6 +69,9 @@ struct OpenAICompatibleProvider: ParallelModelProvider {
             default: "Translate the following text to {targetLang}. Only output the translation, nothing else."
         )
         self.apiKeyKey = .init("provider_\(id)_apiKey", default: "")
+        self.disableThinkingKey = id == "deepseek"
+            ? .init("provider_deepseek_disableThinking", default: false)
+            : nil
         self.guideURL = guideURL
     }
 
@@ -98,10 +107,21 @@ struct OpenAICompatibleProvider: ParallelModelProvider {
         to targetLang: String,
         model: String
     ) -> AsyncThrowingStream<String, Error> {
-        AsyncThrowingStream { continuation in
+        processStream(text, from: sourceLang, to: targetLang, mode: .translation, model: model)
+    }
+
+    func processStream(
+        _ text: String,
+        from sourceLang: String?,
+        to targetLang: String,
+        mode: TextProcessingMode,
+        model: String?
+    ) -> AsyncThrowingStream<String, Error> {
+        let model = model ?? Defaults[modelKey]
+        return AsyncThrowingStream { continuation in
             let task = Task {
                 do {
-                    let request = try buildRequest(text: text, sourceLang: sourceLang, targetLang: targetLang, model: model)
+                    let request = try buildRequest(text: text, sourceLang: sourceLang, targetLang: targetLang, model: model, mode: mode)
                     let (bytes, response) = try await translationURLSession.bytes(for: request)
                     try await streamOpenAISSE(bytes, response: response, to: continuation)
                     continuation.finish()
@@ -120,7 +140,7 @@ struct OpenAICompatibleProvider: ParallelModelProvider {
 
     // MARK: - Private
 
-    private func buildRequest(text: String, sourceLang: String?, targetLang: String, model: String) throws -> URLRequest {
+    private func buildRequest(text: String, sourceLang: String?, targetLang: String, model: String, mode: TextProcessingMode) throws -> URLRequest {
         let baseURL = Defaults[baseURLKey].trimmingCharacters(in: CharacterSet(charactersIn: "/"))
         guard let url = URL(string: "\(baseURL)/chat/completions") else {
             throw TranslationError.invalidURL
@@ -131,9 +151,9 @@ struct OpenAICompatibleProvider: ParallelModelProvider {
         }
 
         let promptTemplate = Defaults[systemPromptKey]
-        let systemPrompt = promptTemplate.replacingOccurrences(of: "{targetLang}", with: targetLang)
+        let systemPrompt = mode.systemPrompt(translationTemplate: promptTemplate, sourceLanguage: sourceLang, targetLanguage: targetLang)
 
-        let body: [String: Any] = [
+        var body: [String: Any] = [
             "model": model,
             "stream": true,
             "messages": [
@@ -141,6 +161,9 @@ struct OpenAICompatibleProvider: ParallelModelProvider {
                 ["role": "user", "content": text],
             ],
         ]
+        if let disableThinkingKey, Defaults[disableThinkingKey] {
+            body["thinking"] = ["type": "disabled"]
+        }
 
         var request = URLRequest(url: url)
         request.timeoutInterval = 30

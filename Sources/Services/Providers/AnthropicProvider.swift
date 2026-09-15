@@ -17,6 +17,7 @@ struct AnthropicProvider: ParallelModelProvider {
     let iconAssetName: String? = "Anthropic"
     var category: ProviderCategory { .llm }
     let supportsStreaming = true
+    let supportsParsing = true
     let isAvailable = true
 
     // Namespaced Defaults keys
@@ -49,10 +50,21 @@ struct AnthropicProvider: ParallelModelProvider {
         to targetLang: String,
         model: String
     ) -> AsyncThrowingStream<String, Error> {
-        AsyncThrowingStream { continuation in
+        processStream(text, from: sourceLang, to: targetLang, mode: .translation, model: model)
+    }
+
+    func processStream(
+        _ text: String,
+        from sourceLang: String?,
+        to targetLang: String,
+        mode: TextProcessingMode,
+        model: String?
+    ) -> AsyncThrowingStream<String, Error> {
+        let model = model ?? Defaults[modelKey]
+        return AsyncThrowingStream { continuation in
             let task = Task {
                 do {
-                    let request = try buildRequest(text: text, sourceLang: sourceLang, targetLang: targetLang, model: model)
+                    let request = try buildRequest(text: text, sourceLang: sourceLang, targetLang: targetLang, model: model, mode: mode)
                     let (bytes, response) = try await translationURLSession.bytes(for: request)
                     try await streamAnthropicSSE(bytes, response: response, to: continuation)
                     continuation.finish()
@@ -71,7 +83,7 @@ struct AnthropicProvider: ParallelModelProvider {
 
     // MARK: - Private
 
-    private func buildRequest(text: String, sourceLang: String?, targetLang: String, model: String) throws -> URLRequest {
+    private func buildRequest(text: String, sourceLang: String?, targetLang: String, model: String, mode: TextProcessingMode) throws -> URLRequest {
         let baseURL = Defaults[baseURLKey].trimmingCharacters(in: CharacterSet(charactersIn: "/"))
         guard let url = URL(string: "\(baseURL)/v1/messages") else {
             throw TranslationError.invalidURL
@@ -82,7 +94,7 @@ struct AnthropicProvider: ParallelModelProvider {
         }
 
         let promptTemplate = Defaults[systemPromptKey]
-        let systemPrompt = promptTemplate.replacingOccurrences(of: "{targetLang}", with: targetLang)
+        let systemPrompt = mode.systemPrompt(translationTemplate: promptTemplate, sourceLanguage: sourceLang, targetLanguage: targetLang)
         let maxTokens = Defaults[maxTokensKey]
 
         let body: [String: Any] = [

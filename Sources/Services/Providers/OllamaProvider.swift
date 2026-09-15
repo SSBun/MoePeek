@@ -11,6 +11,7 @@ struct OllamaProvider: ParallelModelProvider {
     let iconSystemName = "desktopcomputer"
     let category: ProviderCategory = .llm
     let supportsStreaming = true
+    let supportsParsing = true
     let isAvailable = true
 
     let baseURLKey = Defaults.Key<String>("provider_ollama_baseURL", default: "http://localhost:11434")
@@ -42,7 +43,18 @@ struct OllamaProvider: ParallelModelProvider {
         to targetLang: String,
         model: String
     ) -> AsyncThrowingStream<String, Error> {
-        AsyncThrowingStream { continuation in
+        processStream(text, from: sourceLang, to: targetLang, mode: .translation, model: model)
+    }
+
+    func processStream(
+        _ text: String,
+        from sourceLang: String?,
+        to targetLang: String,
+        mode: TextProcessingMode,
+        model: String?
+    ) -> AsyncThrowingStream<String, Error> {
+        let model = model ?? Defaults[modelKey]
+        return AsyncThrowingStream { continuation in
             let task = Task {
                 let baseURL = resolvedBaseURL
                 do {
@@ -58,7 +70,7 @@ struct OllamaProvider: ParallelModelProvider {
                     }
 
                     let promptTemplate = Defaults[systemPromptKey]
-                    let systemPrompt = promptTemplate.replacingOccurrences(of: "{targetLang}", with: targetLang)
+                    let systemPrompt = mode.systemPrompt(translationTemplate: promptTemplate, sourceLanguage: sourceLang, targetLanguage: targetLang)
 
                     let body: [String: Any] = [
                         "model": model,

@@ -3,6 +3,7 @@ import SwiftUI
 
 struct SettingsView: View {
     let registry: TranslationProviderRegistry
+    let parsingCoordinator: ParsingCoordinator
     let updaterController: UpdaterController?
 
     @Default(.selectedSettingsTab) private var selectedTab
@@ -19,7 +20,7 @@ struct SettingsView: View {
 
     var body: some View {
         TabView(selection: $selectedTab) {
-            GeneralSettingsView()
+            GeneralSettingsView(parsingCoordinator: parsingCoordinator)
                 .tabItem {
                     Label("General", systemImage: "gear")
                 }

@@ -45,22 +45,15 @@ final class TranslationProviderRegistry {
     ///   This property is read per-translation call, not observed by SwiftUI.
     var enabledSlots: [any TranslationProvider] {
         let ordered = Self.sorted(enabledProviders, by: Defaults[.providerOrder])
-        var result: [any TranslationProvider] = []
-        for provider in ordered {
-            appendSlots(for: provider, to: &result)
-        }
-        return result
+        return ordered.flatMap { modelSlots(for: $0) }
     }
 
-    /// Expand a single provider into its model slots and append to the result array.
-    private func appendSlots(for provider: any TranslationProvider, to result: inout [any TranslationProvider]) {
+    /// 复用同一模型展开规则，允许解析独立选择未启用为翻译服务的 Provider。
+    func modelSlots(for provider: any TranslationProvider) -> [any TranslationProvider] {
         let models = provider.activeModels
-        if models.isEmpty {
-            result.append(provider)
-        } else {
-            for model in models.prefix(maxParallelModels) {
-                result.append(ModelSlotProvider(inner: provider, modelOverride: model))
-            }
+        guard !models.isEmpty else { return [provider] }
+        return models.prefix(maxParallelModels).map {
+            ModelSlotProvider(inner: provider, modelOverride: $0)
         }
     }
 

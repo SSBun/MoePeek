@@ -11,6 +11,7 @@ struct LMStudioProvider: ParallelModelProvider {
     let iconAssetName: String? = "LMStudio"
     let category: ProviderCategory = .llm
     let supportsStreaming = true
+    let supportsParsing = true
     let isAvailable = true
 
     let baseURLKey = Defaults.Key<String>("provider_lmstudio_baseURL", default: "http://localhost:1234/v1")
@@ -42,7 +43,18 @@ struct LMStudioProvider: ParallelModelProvider {
         to targetLang: String,
         model: String
     ) -> AsyncThrowingStream<String, Error> {
-        AsyncThrowingStream { continuation in
+        processStream(text, from: sourceLang, to: targetLang, mode: .translation, model: model)
+    }
+
+    func processStream(
+        _ text: String,
+        from sourceLang: String?,
+        to targetLang: String,
+        mode: TextProcessingMode,
+        model: String?
+    ) -> AsyncThrowingStream<String, Error> {
+        let model = model ?? Defaults[modelKey]
+        return AsyncThrowingStream { continuation in
             let task = Task {
                 let baseURL = resolvedBaseURL
                 do {
@@ -58,7 +70,7 @@ struct LMStudioProvider: ParallelModelProvider {
                     }
 
                     let promptTemplate = Defaults[systemPromptKey]
-                    let systemPrompt = promptTemplate.replacingOccurrences(of: "{targetLang}", with: targetLang)
+                    let systemPrompt = mode.systemPrompt(translationTemplate: promptTemplate, sourceLanguage: sourceLang, targetLanguage: targetLang)
 
                     let body: [String: Any] = [
                         "model": model,

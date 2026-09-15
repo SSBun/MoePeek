@@ -8,9 +8,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     // registry must be available before applicationDidFinishLaunching because
     // SwiftUI evaluates MoePeekApp.body (which reads registry) during app init.
     lazy var registry = TranslationProviderRegistry.builtIn()
+    lazy var parsingCoordinator = ParsingCoordinator(registry: registry)
     var coordinator: TranslationCoordinator!
     var historyManager: TranslationHistoryManager!
     var panelController: PopupPanelController!
+    var parsingPanelController: ParsingPanelController?
     var permissionManager: PermissionManager!
     var onboardingController: OnboardingWindowController!
     var selectionMonitor: SelectionMonitor!
@@ -29,6 +31,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         coordinator = TranslationCoordinator(permissionManager: permissionManager, registry: registry)
         coordinator.historyManager = historyManager
         panelController = PopupPanelController(coordinator: coordinator, historyManager: historyManager)
+        parsingPanelController = ParsingPanelController(coordinator: parsingCoordinator)
         onboardingController = OnboardingWindowController(permissionManager: permissionManager, registry: registry)
         selectionMonitor = SelectionMonitor()
         triggerIconController = TriggerIconController()
@@ -55,6 +58,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         if !permissionManager.allPermissionsGranted {
             permissionManager.startPolling()
         }
+    }
+
+    func applicationWillTerminate(_: Notification) {
+        parsingPanelController?.dismiss(restoringFocus: false)
     }
 
     // MARK: - URL Scheme Handler
@@ -224,6 +231,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             Task { @MainActor in
                 self.coordinator.prepareInputMode()
                 self.panelController.showAtScreenCenter()
+            }
+        }
+
+        KeyboardShortcuts.onKeyUp(for: .inputParsing) { [weak self] in
+            guard let self else { return }
+            Task { @MainActor in
+                self.parsingPanelController?.show()
             }
         }
 

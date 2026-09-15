@@ -4,6 +4,7 @@ import ServiceManagement
 import SwiftUI
 
 struct GeneralSettingsView: View {
+    @Bindable var parsingCoordinator: ParsingCoordinator
     @Default(.targetLanguage) private var targetLanguage
     @Default(.isAutoDetectEnabled) private var isAutoDetectEnabled
     @Default(.textDetectionMode) private var textDetectionMode
@@ -40,6 +41,7 @@ struct GeneralSettingsView: View {
                 KeyboardShortcuts.Recorder("Selection Translation:", name: .translateSelection)
                 KeyboardShortcuts.Recorder("Screenshot OCR:", name: .ocrScreenshot)
                 KeyboardShortcuts.Recorder("Manual Translation:", name: .inputTranslation)
+                KeyboardShortcuts.Recorder("Text Parsing:", name: .inputParsing)
                 KeyboardShortcuts.Recorder("Clipboard Translation:", name: .clipboardTranslation)
             }
 
@@ -111,6 +113,29 @@ struct GeneralSettingsView: View {
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
+            }
+
+            Section("Parsing") {
+                Picker("Parsing Provider", selection: $parsingCoordinator.selectedProviderID) {
+                    Text("Enabled LLMs (Default)").tag("")
+                    ForEach(parsingCoordinator.availableProviders, id: \.id) { provider in
+                        Text(provider.displayName).tag(provider.id)
+                    }
+                    if !parsingCoordinator.selectedProviderID.isEmpty,
+                       !parsingCoordinator.availableProviders.contains(where: { $0.id == parsingCoordinator.selectedProviderID }) {
+                        Text("Unavailable Provider").tag(parsingCoordinator.selectedProviderID)
+                    }
+                }
+
+                Picker("Explanation Language", selection: $parsingCoordinator.selectedExplanationLanguage) {
+                    Text("Same as translation target (Default)").tag("")
+                    ForEach(SupportedLanguages.all, id: \.code) { code, name in
+                        Text(name).tag(code)
+                    }
+                }
+                Text("Chinese input becomes natural English; English input is analyzed directly. This setting only controls the explanation language.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
             }
 
             Section("Language Detection") {

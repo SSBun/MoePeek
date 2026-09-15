@@ -29,6 +29,13 @@ struct MenuItemView: View {
         .globalKeyboardShortcut(.inputTranslation)
 
         Button {
+            appDelegate.parsingPanelController?.show()
+        } label: {
+            Label("Parse Text", systemImage: "text.magnifyingglass")
+        }
+        .globalKeyboardShortcut(.inputParsing)
+
+        Button {
             guard let coordinator = appDelegate.coordinator,
                   let panelController = appDelegate.panelController else { return }
             Task {
