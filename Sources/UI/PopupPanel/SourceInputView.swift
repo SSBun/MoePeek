@@ -6,6 +6,7 @@ import SwiftUI
 struct SourceInputView: View {
     @Binding var text: String
     let onSubmit: () -> Void
+    var placeholder: LocalizedStringKey? = nil
     var shortcutHint: LocalizedStringKey = "↵ Translate · ⇧↵ Newline · ⌘↵ Copy & Close"
     @Default(.popupFontSize) private var fontSize
     @Default(.popupFontName) private var fontName
@@ -19,6 +20,14 @@ struct SourceInputView: View {
                 onSubmit: onSubmit
             )
                 .frame(maxHeight: .infinity)
+                .overlay(alignment: .topLeading) {
+                    if text.isEmpty, let placeholder {
+                        Text(placeholder)
+                            .font(.popup(name: fontName, size: CGFloat(fontSize)))
+                            .foregroundStyle(Color(nsColor: .placeholderTextColor))
+                            .allowsHitTesting(false)
+                    }
+                }
                 .background { InteractiveMarker() }
 
             HStack(spacing: 4) {

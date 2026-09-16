@@ -29,6 +29,7 @@ struct WordLookupPanelView: View {
             SourceInputView(
                 text: inputText,
                 onSubmit: submit,
+                placeholder: "Enter a word to look up.",
                 shortcutHint: "↵ Look Up · ⇧↵ Newline · ⌘↵ Copy & Close"
             )
             .frame(height: min(max(36, inputHeight), maxInputHeight))
