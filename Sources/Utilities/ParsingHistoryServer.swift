@@ -1,7 +1,7 @@
 import Foundation
 import Network
 
-/// 按需启动的只读复习服务；仅绑定 IPv4 回环地址，不提供通用文件服务器。
+/// 按需启动的本机复习服务；仅允许读取历史及更新收藏、打卡状态。
 @MainActor
 final class ParsingHistoryServer {
     private let store: ParsingHistoryStore
@@ -139,7 +139,8 @@ final class ParsingHistoryServer {
         let lines = text.components(separatedBy: "\r\n")
         let request = (lines.first ?? "").split(separator: " ")
         guard request.count == 3, request[2] == "HTTP/1.1" else { respond(id, status: 400); return }
-        guard request[0] == "GET" else { respond(id, status: 405); return }
+        let method = String(request[0])
+        guard method == "GET" || method == "POST" else { respond(id, status: 405); return }
         var headers: [String: String] = [:]
         for line in lines.dropFirst() {
             guard let colon = line.firstIndex(of: ":") else { respond(id, status: 400); return }
@@ -164,7 +165,7 @@ final class ParsingHistoryServer {
             "/history.js": ("parsing-history.js", "text/javascript; charset=utf-8"),
             "/history.css": ("parsing-history.css", "text/css; charset=utf-8"),
         ]
-        if let (name, type) = assets[path] {
+        if let (name, type) = assets[path], method == "GET" {
             guard let url = Bundle.main.url(forResource: name, withExtension: nil),
                   let data = try? Data(contentsOf: url) else { respond(id, status: 500); return }
             respond(id, status: 200, type: type, body: data)
@@ -172,7 +173,27 @@ final class ParsingHistoryServer {
         }
         guard !token.isEmpty, headers["authorization"] == "Bearer " + token else { respond(id, status: 403); return }
         do {
-            if path == "/api/days" {
+            let components = path.split(separator: "/", omittingEmptySubsequences: false)
+            if components.count >= 4, components[1] == "api", components[2] == "review",
+               ParsingHistoryStore.isValidDay(String(components[3])) {
+                let day = String(components[3])
+                let snapshot: ParsingHistoryStore.ReviewSnapshot
+                if method == "GET", components.count == 4 {
+                    snapshot = try await store.reviewSnapshot(for: day)
+                } else if method == "POST", components.count == 6,
+                          let entryID = UUID(uuidString: String(components[4])),
+                          ["favorite", "unfavorite", "study"].contains(String(components[5])) {
+                    snapshot = try await store.updateReview(for: day, entryID: entryID, action: String(components[5]))
+                } else {
+                    respond(id, status: 400)
+                    return
+                }
+                let encoder = JSONEncoder()
+                encoder.dateEncodingStrategy = .iso8601
+                respond(id, status: 200, type: "application/json", body: try encoder.encode(snapshot))
+            } else if method != "GET" {
+                respond(id, status: 405)
+            } else if path == "/api/days" {
                 let days = try await store.days()
                 respond(id, status: 200, type: "application/json", body: try JSONEncoder().encode(days))
             } else if path.hasPrefix("/api/history/"), ParsingHistoryStore.isValidDay(String(path.dropFirst(13))) {

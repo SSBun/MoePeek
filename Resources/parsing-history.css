@@ -49,6 +49,15 @@ input { width: 100%; min-width: 0; }
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
 #status { color: var(--note); font-size: 12px; line-height: 1.5; margin: 16px 0 20px; }
 .entry { margin-bottom: 28px; }
+.card-row { display: grid; grid-template-columns: minmax(0, 1fr) 34px; gap: 8px; align-items: start; }
+.card-actions { position: relative; }
+.card-actions summary { list-style: none; cursor: pointer; text-align: center; font-size: 22px; line-height: 34px; border-radius: 7px; }
+.card-actions summary::-webkit-details-marker { display: none; }
+.card-actions summary:hover, .card-actions[open] summary { background: var(--border); }
+.card-menu { position: absolute; right: 0; top: 40px; z-index: 2; width: min(280px, 80vw); padding: 8px; border: 1px solid var(--border); border-radius: 10px; background: var(--card-top); box-shadow: 0 8px 24px #0003; }
+.card-menu button { display: block; width: 100%; text-align: left; border: 0; }
+.study-progress, .action-feedback { font-size: 12px; line-height: 1.5; color: var(--note); margin: 8px 4px 0; overflow-wrap: anywhere; }
+.action-feedback:empty { display: none; }
 .meta { padding: 0 4px; margin: 0 0 9px; color: var(--note); font-size: 12px; overflow-wrap: anywhere; }
 .card {
   background: linear-gradient(125deg, var(--card-top), var(--card-bottom));

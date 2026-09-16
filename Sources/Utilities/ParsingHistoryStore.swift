@@ -14,6 +14,24 @@ actor ParsingHistoryStore {
         let result: ParsingResult
     }
 
+    /// 每次打卡保留当时的本地日期和绝对时间。
+    struct StudyEvent: Codable, Sendable {
+        let day: String
+        let studiedAt: Date
+    }
+
+    /// 次数由完整事件数组派生，避免重复存储计数产生不一致。
+    struct ReviewState: Codable, Sendable {
+        var isFavorite = false
+        var studyEvents: [StudyEvent] = []
+    }
+
+    /// 日期来自服务端本机时区，浏览器不参与每日限次判定。
+    struct ReviewSnapshot: Encodable, Sendable {
+        let today: String
+        let states: [String: ReviewState]
+    }
+
     nonisolated let directoryURL: URL
 
     init(directoryURL: URL = URL.applicationSupportDirectory.appendingPathComponent("MoePeek/ParsingHistory", isDirectory: true)) {
@@ -113,7 +131,10 @@ actor ParsingHistoryStore {
     /// 在共享锁内读取完整日期文件，拒绝路径穿越、符号链接和特殊文件。
     func contents(for day: String) throws -> Data {
         guard Self.isValidDay(day) else { throw CocoaError(.fileReadInvalidFileName) }
-        let url = directoryURL.appendingPathComponent(day + ".jsonl")
+        return try readFile(at: directoryURL.appendingPathComponent(day + ".jsonl"))
+    }
+
+    private func readFile(at url: URL) throws -> Data {
         let descriptor = Darwin.open(url.path, O_RDONLY | O_CLOEXEC | O_NOFOLLOW | O_NONBLOCK)
         guard descriptor >= 0 else { throw POSIXError(POSIXErrorCode(rawValue: errno) ?? .EIO) }
         defer { Darwin.close(descriptor) }
@@ -126,6 +147,66 @@ actor ParsingHistoryStore {
         guard metadata.st_size <= 64 * 1024 * 1024 else { throw CocoaError(.fileReadTooLarge) }
         let handle = FileHandle(fileDescriptor: descriptor, closeOnDealloc: false)
         return try handle.readToEnd() ?? Data()
+    }
+
+    /// 读取独立的复习状态，不修改已有 JSONL。
+    func reviewSnapshot(for day: String) throws -> ReviewSnapshot {
+        guard Self.isValidDay(day) else { throw CocoaError(.fileReadInvalidFileName) }
+        let url = directoryURL.appendingPathComponent(day + ".review.json")
+        let states: [String: ReviewState]
+        do {
+            let decoder = JSONDecoder()
+            decoder.dateDecodingStrategy = .iso8601
+            states = try decoder.decode([String: ReviewState].self, from: readFile(at: url))
+        } catch let error as POSIXError where error.code == .ENOENT {
+            states = [:]
+        }
+        return ReviewSnapshot(today: localDay(at: Date()), states: states)
+    }
+
+    /// 在同一个 actor 临界区读取、限次并原子保存；失败时不返回成功状态。
+    func updateReview(for day: String, entryID: UUID, action: String) throws -> ReviewSnapshot {
+        guard ["favorite", "unfavorite", "study"].contains(action) else {
+            throw POSIXError(.EINVAL)
+        }
+        let history = try contents(for: day)
+        let exists = history.split(separator: 0x0A).contains { line in
+            guard let entry = try? JSONSerialization.jsonObject(with: Data(line)) as? [String: Any],
+                  let rawID = entry["id"] as? String else { return false }
+            return UUID(uuidString: rawID) == entryID
+        }
+        guard exists else { throw CocoaError(.fileReadNoSuchFile) }
+        let snapshot = try reviewSnapshot(for: day)
+        let now = Date()
+        let today = localDay(at: now)
+        var states = snapshot.states
+        let key = entryID.uuidString.lowercased()
+        var state = states[key] ?? ReviewState()
+        switch action {
+        case "favorite": state.isFavorite = true
+        case "unfavorite": state.isFavorite = false
+        default:
+            if !state.studyEvents.contains(where: { $0.day == today }) {
+                state.studyEvents.append(StudyEvent(day: today, studiedAt: now))
+            }
+        }
+        states[key] = state
+        let encoder = JSONEncoder()
+        encoder.dateEncodingStrategy = .iso8601
+        let data = try encoder.encode(states)
+        guard data.count <= 64 * 1024 * 1024 else { throw CocoaError(.fileWriteOutOfSpace) }
+        let url = directoryURL.appendingPathComponent(day + ".review.json")
+        try data.write(to: url, options: [.atomic])
+        return ReviewSnapshot(today: today, states: states)
+    }
+
+    private func localDay(at date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.calendar = Calendar(identifier: .gregorian)
+        formatter.timeZone = .current
+        formatter.dateFormat = "yyyy-MM-dd"
+        return formatter.string(from: date)
     }
 
     nonisolated static func isValidDay(_ day: String) -> Bool {

@@ -19,6 +19,10 @@ let skipped = 0;
 let visibleCount = 30;
 let generation = 0;
 let controller;
+let reviewSnapshot;
+let reviewVersion = 0;
+let reviewBusy = false;
+let reviewControls = [];
 
 function element(tag, text, className) {
   const node = document.createElement(tag);
@@ -27,10 +31,10 @@ function element(tag, text, className) {
   return node;
 }
 
-async function request(path, signal) {
-  const response = await fetch(path, { headers: { Authorization: `Bearer ${token}` }, cache: "no-store", signal });
+async function request(path, signal, method = "GET") {
+  const response = await fetch(path, { method, headers: { Authorization: `Bearer ${token}` }, cache: "no-store", signal });
   if (response.status === 403) throw new Error("访问已过期，请从 MoePeek 的「英语复习」重新打开页面。");
-  if (!response.ok) throw new Error("暂时无法读取记录（文件可能被占用或过大），请稍后刷新。原文件未被修改。");
+  if (!response.ok) throw new Error("暂时无法读取或保存记录，请稍后刷新重试。原解析记录未被修改。");
   return response;
 }
 
@@ -117,6 +121,93 @@ function addTerms(parent, title, terms, key) {
   }
 }
 
+function updateReviewControls() {
+  for (const update of reviewControls) update();
+}
+
+async function refreshReview() {
+  if (!daySelect.value || reviewBusy || !records.length) return;
+  const version = ++reviewVersion;
+  const day = daySelect.value;
+  try {
+    const snapshot = await (await request(`/api/review/${day}`)).json();
+    if (version !== reviewVersion) return;
+    reviewSnapshot = snapshot;
+    updateReviewControls();
+  } catch (error) {
+    if (version !== reviewVersion) return;
+    reviewSnapshot = undefined;
+    updateReviewControls();
+    status.textContent = `无法读取收藏与学习状态：${error.message}`;
+  }
+}
+
+function cardActions(entry) {
+  const actions = element("details", undefined, "card-actions");
+  const summary = element("summary", "⋯");
+  summary.setAttribute("aria-label", "收藏与学习菜单");
+  const menu = element("div", undefined, "card-menu");
+  const favorite = element("button");
+  const study = element("button");
+  favorite.type = study.type = "button";
+  const progress = element("p", undefined, "study-progress");
+  const feedback = element("p", undefined, "action-feedback");
+  feedback.setAttribute("role", "status");
+  const key = typeof entry.id === "string" ? entry.id.toLowerCase() : "";
+  const hasID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(key);
+  const day = daySelect.value;
+  function update() {
+    const state = reviewSnapshot?.states[key];
+    const events = state?.studyEvents || [];
+    const studied = events.some(event => event.day === reviewSnapshot?.today);
+    favorite.textContent = state?.isFavorite ? "★ Unfavorite · 取消收藏" : "☆ Favorite · 收藏";
+    favorite.setAttribute("aria-pressed", String(Boolean(state?.isFavorite)));
+    study.textContent = studied ? "✓ Study · 今天已学习" : "Study · 今天学过了";
+    favorite.disabled = reviewBusy || !reviewSnapshot || !hasID;
+    study.disabled = favorite.disabled || studied;
+    const last = events.at(-1);
+    progress.textContent = !hasID ? "此旧记录缺少有效标识，无法保存状态。"
+      : !reviewSnapshot ? "收藏与学习状态暂不可用"
+      : `已学习 ${events.length} 次${last ? ` · 最近：${new Date(last.studiedAt).toLocaleString()}` : ""}`;
+    progress.title = events.map(event => new Date(event.studiedAt).toLocaleString()).join("\n");
+  }
+  async function save(action) {
+    if (reviewBusy || day !== daySelect.value) return;
+    reviewBusy = true;
+    const version = ++reviewVersion;
+    feedback.textContent = "正在保存…";
+    updateReviewControls();
+    try {
+      const snapshot = await (await request(`/api/review/${day}/${key}/${action}`, undefined, "POST")).json();
+      if (version !== reviewVersion) return;
+      reviewSnapshot = snapshot;
+      feedback.textContent = "已保存";
+    } catch (error) {
+      if (version !== reviewVersion) return;
+      feedback.textContent = `保存未确认，请刷新后重试：${error.message}`;
+    } finally {
+      reviewBusy = false;
+      updateReviewControls();
+      if (version !== reviewVersion) refreshReview();
+    }
+  }
+  favorite.addEventListener("click", () => save(reviewSnapshot?.states[key]?.isFavorite ? "unfavorite" : "favorite"));
+  study.addEventListener("click", () => save("study"));
+  actions.addEventListener("toggle", () => {
+    if (!actions.open) return;
+    for (const other of entries.querySelectorAll("details[open]")) if (other !== actions) other.open = false;
+    refreshReview();
+  });
+  actions.addEventListener("keydown", event => {
+    if (event.key === "Escape") { actions.open = false; summary.focus(); }
+  });
+  reviewControls.push(update);
+  update();
+  menu.append(favorite, study, progress, feedback);
+  actions.append(summary, menu);
+  return actions;
+}
+
 function card(entry) {
   const article = element("article", undefined, "entry");
   const time = new Date(entry.completedAt);
@@ -156,13 +247,16 @@ function card(entry) {
       body.append(element("p", "内容过短、代码较多或不适合语言分析。"));
     }
   }
-  article.append(body);
+  const row = element("div", undefined, "card-row");
+  row.append(body, cardActions(entry));
+  article.append(row);
   return article;
 }
 
 function render() {
   const query = search.value.trim().toLocaleLowerCase();
   const filtered = records.filter(entry => entry.searchText.includes(query));
+  reviewControls = [];
   entries.replaceChildren(...filtered.slice(0, visibleCount).map(entry => card(entry.record)));
   more.hidden = filtered.length <= visibleCount;
   const warning = skipped ? ` ${skipped} 条损坏或版本不支持的记录未显示，原文件已保留。` : "";
@@ -191,6 +285,9 @@ function renderDates(days) {
 
 async function load(reloadDays = false) {
   const current = ++generation;
+  ++reviewVersion;
+  reviewSnapshot = undefined;
+  reviewControls = [];
   controller?.abort();
   controller = new AbortController();
   const signal = controller.signal;
@@ -238,6 +335,7 @@ async function load(reloadDays = false) {
     visibleCount = 30;
     loaded = true;
     render();
+    await refreshReview();
   } catch (error) {
     if (current !== generation || error.name === "AbortError") return;
     status.textContent = error instanceof TypeError ? "无法连接 MoePeek。请保持应用运行，并从菜单重新打开「英语复习」。" : error.message;
@@ -253,4 +351,12 @@ search.addEventListener("input", () => { visibleCount = 30; render(); });
 more.addEventListener("click", () => { visibleCount += 30; render(); });
 theme.addEventListener("change", () => { document.documentElement.dataset.theme = theme.value; });
 document.documentElement.dataset.theme = theme.value;
+// 定期和重新聚焦时向本机服务校准日期，跨午夜或多标签页无需重新打开页面。
+setInterval(refreshReview, 30_000);
+window.addEventListener("focus", refreshReview);
+document.addEventListener("click", event => {
+  for (const menu of entries.querySelectorAll("details[open]")) {
+    if (!menu.contains(event.target)) menu.open = false;
+  }
+});
 load(true);
