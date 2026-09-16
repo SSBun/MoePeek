@@ -9,14 +9,26 @@ final class WordLookupPanelController: NSObject, NSWindowDelegate {
     private var panel: PopupPanel?
     private var keyMonitor: Any?
     private var previouslyActiveApp: NSRunningApplication?
+    private var focusGeneration = 0
 
     init(coordinator: WordLookupCoordinator) {
         self.coordinator = coordinator
         super.init()
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(applicationDidResignActive),
+            name: NSApplication.didResignActiveNotification,
+            object: NSApp
+        )
+    }
+
+    deinit {
+        NotificationCenter.default.removeObserver(self)
     }
 
     /// 重复打开只激活已有窗口，保留正在查看的条目。
     func show() {
+        focusGeneration += 1
         if panel == nil {
             let activeApp = NSWorkspace.shared.frontmostApplication
             previouslyActiveApp = activeApp?.processIdentifier == ProcessInfo.processInfo.processIdentifier ? nil : activeApp
@@ -46,7 +58,8 @@ final class WordLookupPanelController: NSObject, NSWindowDelegate {
 
     /// 清理本模式的窗口和网络请求，不影响其它模式。
     func dismiss(restoringFocus: Bool = true) {
-        let wasKeyWindow = panel?.isKeyWindow == true
+        guard panel != nil else { return }
+        let shouldRestoreFocus = restoringFocus && NSApp.isActive && panel?.isKeyWindow == true
         if let keyMonitor { NSEvent.removeMonitor(keyMonitor) }
         keyMonitor = nil
         coordinator.reset()
@@ -54,13 +67,35 @@ final class WordLookupPanelController: NSObject, NSWindowDelegate {
         panel?.delegate = nil
         panel?.close()
         panel = nil
-        if restoringFocus, wasKeyWindow { previouslyActiveApp?.activate(options: []) }
+        if shouldRestoreFocus { previouslyActiveApp?.activate(options: []) }
         previouslyActiveApp = nil
     }
 
     func windowShouldClose(_ sender: NSWindow) -> Bool {
         dismiss()
         return false
+    }
+
+    func windowDidResignKey(_ notification: Notification) {
+        guard let window = notification.object as? NSWindow, window === panel else { return }
+        dismissAfterFocusChange(applicationDeactivated: false)
+    }
+
+    @objc
+    private func applicationDidResignActive() {
+        dismissAfterFocusChange(applicationDeactivated: true)
+    }
+
+    private func dismissAfterFocusChange(applicationDeactivated: Bool) {
+        guard let panel else { return }
+        let generation = focusGeneration
+        DispatchQueue.main.async { [weak self, weak panel] in
+            guard let self, let panel, self.panel === panel,
+                  self.focusGeneration == generation else { return }
+            let lostFocus = applicationDeactivated ? !NSApp.isActive : !panel.isKeyWindow
+            guard lostFocus else { return }
+            self.dismiss(restoringFocus: false)
+        }
     }
 
     /// 只拦截此窗口的快捷键，避免同时打开翻译/设置时误复制或关闭。

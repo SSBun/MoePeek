@@ -4,11 +4,12 @@ import SwiftUI
 
 /// Manages the lifecycle and positioning of the popup translation panel.
 @MainActor
-final class PopupPanelController {
+final class PopupPanelController: NSObject, NSWindowDelegate {
     var onDismiss: (() -> Void)?
 
     private var panel: PopupPanel?
     private var dismissMonitor: PopupDismissMonitor?
+    private var focusGeneration = 0
 
     private let coordinator: TranslationCoordinator
     let historyManager: TranslationHistoryManager
@@ -20,9 +21,28 @@ final class PopupPanelController {
     init(coordinator: TranslationCoordinator, historyManager: TranslationHistoryManager) {
         self.coordinator = coordinator
         self.historyManager = historyManager
+        super.init()
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(applicationDidResignActive),
+            name: NSApplication.didResignActiveNotification,
+            object: NSApp
+        )
+        NSWorkspace.shared.notificationCenter.addObserver(
+            self,
+            selector: #selector(workspaceDidActivateApplication(_:)),
+            name: NSWorkspace.didActivateApplicationNotification,
+            object: nil
+        )
+    }
+
+    deinit {
+        NotificationCenter.default.removeObserver(self)
+        NSWorkspace.shared.notificationCenter.removeObserver(self)
     }
 
     func showAtCursor() {
+        focusGeneration += 1
         let initialSize = setupPanel()
         guard let panel else { return }
 
@@ -44,6 +64,7 @@ final class PopupPanelController {
     }
 
     func showAtScreenCenter() {
+        focusGeneration += 1
         let initialSize = setupPanel()
         guard let panel else { return }
 
@@ -69,10 +90,13 @@ final class PopupPanelController {
         startDismissMonitor()
     }
 
-    func dismiss() {
+    func dismiss(restoringFocus: Bool = true) {
+        guard panel != nil else { return }
+        let shouldRestoreFocus = restoringFocus && NSApp.isActive && panel?.isKeyWindow == true
         dismissMonitor?.stop()
         dismissMonitor = nil
         panel?.contentView = nil
+        panel?.delegate = nil
         panel?.close()
         // Recreate panel on next show to ensure a fresh SwiftUI view tree,
         // avoiding stale @Observable state from previous translation sessions.
@@ -81,7 +105,7 @@ final class PopupPanelController {
         onDismiss?()
 
         // Restore focus to the previously active app so the user's workflow isn't interrupted.
-        if let previousApp = previouslyActiveApp {
+        if shouldRestoreFocus, let previousApp = previouslyActiveApp {
             previousApp.activate(options: [])
         }
         previouslyActiveApp = nil
@@ -91,7 +115,37 @@ final class PopupPanelController {
         panel?.isVisible ?? false
     }
 
+    func windowDidResignKey(_ notification: Notification) {
+        guard let window = notification.object as? NSWindow, window === panel else { return }
+        dismissAfterFocusChange(applicationDeactivated: false)
+    }
+
     // MARK: - Private
+
+    @objc
+    private func applicationDidResignActive() {
+        dismissAfterFocusChange(applicationDeactivated: true)
+    }
+
+    @objc
+    private func workspaceDidActivateApplication(_ notification: Notification) {
+        guard let application = notification.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication,
+              application.processIdentifier != ProcessInfo.processInfo.processIdentifier else { return }
+        // Cursor-mode panels may never become key or activate our app.
+        dismissAfterFocusChange(applicationDeactivated: true)
+    }
+
+    private func dismissAfterFocusChange(applicationDeactivated: Bool) {
+        guard let panel else { return }
+        let generation = focusGeneration
+        DispatchQueue.main.async { [weak self, weak panel] in
+            guard let self, let panel, self.panel === panel,
+                  self.focusGeneration == generation else { return }
+            let lostFocus = applicationDeactivated ? !NSApp.isActive : !panel.isKeyWindow
+            guard lostFocus else { return }
+            self.dismiss(restoringFocus: false)
+        }
+    }
 
     @discardableResult
     private func setupPanel() -> CGSize {
@@ -118,6 +172,7 @@ final class PopupPanelController {
             // which causes an infinite constraint update loop during streaming.
             hostingView.sizingOptions = []
             newPanel.contentView = hostingView
+            newPanel.delegate = self
             panel = newPanel
         }
 
@@ -126,8 +181,12 @@ final class PopupPanelController {
 
     private func startDismissMonitor() {
         guard let panel else { return }
-        dismissMonitor = PopupDismissMonitor(panel: panel) { [weak self] in
-            self?.dismiss()
+        dismissMonitor?.stop()
+        let generation = focusGeneration
+        dismissMonitor = PopupDismissMonitor(panel: panel) { [weak self, weak panel] in
+            guard let self, let panel, self.panel === panel,
+                  self.focusGeneration == generation else { return }
+            self.dismiss()
         }
         dismissMonitor?.start()
     }
