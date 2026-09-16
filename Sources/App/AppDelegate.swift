@@ -42,6 +42,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         setupShortcuts()
         setupSelectionMonitor()
+        parsingCoordinator.startHistoryService()
 
         // Show onboarding on first launch; returning users start silently as a menu bar app.
         if !Defaults[.hasCompletedOnboarding] {

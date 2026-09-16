@@ -72,6 +72,19 @@ final class ParsingCoordinator {
         selectedExplanationLanguage = Defaults[.parsingExplanationLanguage]
     }
 
+    /// 随应用启动本机复习服务，不打开浏览器；失败后仍可通过复习入口重试。
+    func startHistoryService() {
+        Task { [weak self] in
+            guard let self else { return }
+            do {
+                _ = try await self.historyServer.start()
+                Self.logger.info("reviewService.started")
+            } catch {
+                Self.logger.error("reviewService.start.failed")
+            }
+        }
+    }
+
     /// 在系统浏览器中打开本地学习页，启动失败时提供可见反馈。
     func openHistory() {
         Task { [weak self] in
