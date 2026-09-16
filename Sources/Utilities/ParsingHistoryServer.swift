@@ -164,6 +164,7 @@ final class ParsingHistoryServer {
             "/index.html": ("parsing-history.html", "text/html; charset=utf-8"),
             "/history.js": ("parsing-history.js", "text/javascript; charset=utf-8"),
             "/history.css": ("parsing-history.css", "text/css; charset=utf-8"),
+            "/favicon.png": ("parsing-history-favicon.png", "image/png"),
         ]
         if let (name, type) = assets[path], method == "GET" {
             guard let url = Bundle.main.url(forResource: name, withExtension: nil),
@@ -214,7 +215,7 @@ final class ParsingHistoryServer {
             "HTTP/1.1 \(status) \(status == 200 ? "OK" : "Error")",
             "Content-Type: \(type)", "Content-Length: \(body.count)", "Connection: close",
             "Cache-Control: no-store", "X-Content-Type-Options: nosniff", "Referrer-Policy: no-referrer",
-            "Content-Security-Policy: default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'self'; base-uri 'none'; frame-ancestors 'none'; form-action 'none'",
+            "Content-Security-Policy: default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src 'self'; base-uri 'none'; frame-ancestors 'none'; form-action 'none'",
         ].joined(separator: "\r\n")
         var response = Data((headers + "\r\n\r\n").utf8)
         response.append(body)
