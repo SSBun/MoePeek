@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>英语复习 · MoePeek</title>
+  <link rel="stylesheet" href="/history.css">
+  <script src="/history.js" defer></script>
+</head>
+<body>
+  <header><a class="brand" href="/index.html">MoePeek <span>学习笔记</span></a><span class="local">仅在本机 · 离线可读</span></header>
+  <main>
+    <section class="intro" aria-labelledby="title">
+      <p class="eyebrow">温故，知新。</p>
+      <h1 id="title">把看过的英文，变成自己的表达。</h1>
+      <p>先读原句，试着想一想，再展开解析。每一次小小的积累，都留在这里。</p>
+    </section>
+    <form class="toolbar" role="search">
+      <label>学习日期<select id="day" disabled><option>暂无记录</option></select></label>
+      <label class="search">查找笔记<input id="search" type="search" placeholder="搜索当天的原句、词汇或语法…" autocomplete="off"></label>
+      <button type="button" id="refresh">刷新记录</button>
+    </form>
+    <p id="status" role="status" aria-live="polite">正在读取学习笔记…</p>
+    <div id="entries"></div>
+    <button type="button" id="more" hidden>继续阅读</button>
+    <footer>笔记保存在你的 Mac 上。旧版 Markdown 文件仍保留在历史目录中，不在此页显示。</footer>
+  </main>
+</body>
+</html>

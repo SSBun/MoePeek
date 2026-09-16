@@ -36,6 +36,12 @@ struct MenuItemView: View {
         .globalKeyboardShortcut(.inputParsing)
 
         Button {
+            appDelegate.parsingCoordinator.openHistory()
+        } label: {
+            Label("Review English", systemImage: "book")
+        }
+
+        Button {
             guard let coordinator = appDelegate.coordinator,
                   let panelController = appDelegate.panelController else { return }
             Task {

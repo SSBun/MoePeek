@@ -1,6 +1,27 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "Open Parsing History Folder" : {
+      "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "打开解析记录文件夹" } } }
+    },
+    "Review English" : {
+      "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "英语复习" } } }
+    },
+    "Parsing results are saved locally as daily JSONL files. Review them in your browser while MoePeek is running." : {
+      "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "解析结果按天保存为本地 JSONL 文件。保持 MoePeek 运行，即可在浏览器中复习。" } } }
+    },
+    "Could not open parsing review." : {
+      "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "无法打开英语复习页面。" } } }
+    },
+    "Please try again. Your saved parsing history has not been changed." : {
+      "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "请重试。已保存的解析记录未被修改。" } } }
+    },
+    "Could not open parsing history folder." : {
+      "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "无法打开解析记录文件夹，请检查目录权限。" } } }
+    },
+    "Could not save parsing history. The result is still available; copy it before closing." : {
+      "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "解析记录保存失败。结果仍可使用，请在关闭前复制保存。" } } }
+    },
     "Enable Accessibility to paste back." : {
       "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "请授予辅助功能权限后再回填。" } } }
     },

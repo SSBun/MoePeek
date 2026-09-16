@@ -61,6 +61,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationWillTerminate(_: Notification) {
+        parsingCoordinator.historyServer.stop()
         parsingPanelController?.dismiss(restoringFocus: false)
     }
 

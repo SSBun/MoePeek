@@ -88,6 +88,9 @@ struct ParsingPanelView: View {
             if let error = coordinator.globalError {
                 Text(error).foregroundStyle(.red)
             }
+            if let error = coordinator.historyError {
+                Text(error).foregroundStyle(.red)
+            }
             ForEach(coordinator.activeSlots, id: \.id) { provider in
                 if let state = coordinator.providerStates[provider.id] {
                     VStack(alignment: .leading, spacing: 4) {

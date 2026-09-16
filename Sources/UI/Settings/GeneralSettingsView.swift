@@ -32,6 +32,7 @@ struct GeneralSettingsView: View {
 
     @State private var launchAtLogin = SMAppService.mainApp.status == .enabled
     @State private var showRestartAlert = false
+    @State private var showHistoryFolderError = false
     @State private var availableFonts = NSFontManager.shared.availableFontFamilies
     @State private var availableInputSources: [KeyboardInputSource] = []
 
@@ -136,6 +137,12 @@ struct GeneralSettingsView: View {
                 Text("Chinese input becomes natural English; English input is analyzed directly. This setting only controls the explanation language.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
+
+                Button("Review English", action: parsingCoordinator.openHistory)
+                Button("Open Parsing History Folder", action: openParsingHistoryFolder)
+                Text("Parsing results are saved locally as daily JSONL files. Review them in your browser while MoePeek is running.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
             }
 
             Section("Language Detection") {
@@ -212,6 +219,21 @@ struct GeneralSettingsView: View {
             Button("Later", role: .cancel) { }
         } message: {
             Text("Changing language requires restarting the app.")
+        }
+        .alert("Could not open parsing history folder.", isPresented: $showHistoryFolderError) {
+            Button("OK", role: .cancel) { }
+        }
+    }
+
+    /// 即使尚无记录，也创建并打开同一个实际存储目录。
+    private func openParsingHistoryFolder() {
+        Task { @MainActor in
+            do {
+                let directory = try await parsingCoordinator.historyStore.prepareDirectory()
+                showHistoryFolderError = !NSWorkspace.shared.open(directory)
+            } catch {
+                showHistoryFolderError = true
+            }
         }
     }
 }
