@@ -352,7 +352,7 @@ struct PopupView: View {
 /// A draggable grip in the bottom-right corner for resizing the popup panel.
 /// Uses SwiftUI DragGesture with NSEvent.mouseLocation (screen coordinates) to avoid
 /// EXC_BAD_ACCESS caused by overriding mouse events on NSPanel with NSHostingView.
-private struct ResizeGripView: View {
+struct ResizeGripView: View {
     @Environment(\.popupPanel) private var panel
     @State private var dragStartMouse: NSPoint?
     @State private var dragStartFrame: NSRect?
@@ -430,7 +430,7 @@ private struct ResizeGripView: View {
 
 /// A horizontal divider between the source input and translation results that can be
 /// dragged vertically to resize the input area.
-private struct DraggableDividerView: View {
+struct DraggableDividerView: View {
     @Binding var inputHeight: CGFloat
     let minHeight: CGFloat
     let maxHeight: CGFloat

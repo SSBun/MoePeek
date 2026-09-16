@@ -9,10 +9,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     // SwiftUI evaluates MoePeekApp.body (which reads registry) during app init.
     lazy var registry = TranslationProviderRegistry.builtIn()
     lazy var parsingCoordinator = ParsingCoordinator(registry: registry)
+    lazy var wordLookupCoordinator = WordLookupCoordinator(registry: registry)
     var coordinator: TranslationCoordinator!
     var historyManager: TranslationHistoryManager!
     var panelController: PopupPanelController!
     var parsingPanelController: ParsingPanelController?
+    var wordLookupPanelController: WordLookupPanelController?
     var permissionManager: PermissionManager!
     var onboardingController: OnboardingWindowController!
     var selectionMonitor: SelectionMonitor!
@@ -32,6 +34,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         coordinator.historyManager = historyManager
         panelController = PopupPanelController(coordinator: coordinator, historyManager: historyManager)
         parsingPanelController = ParsingPanelController(coordinator: parsingCoordinator)
+        wordLookupPanelController = WordLookupPanelController(coordinator: wordLookupCoordinator)
         onboardingController = OnboardingWindowController(permissionManager: permissionManager, registry: registry)
         selectionMonitor = SelectionMonitor()
         triggerIconController = TriggerIconController()
@@ -64,6 +67,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationWillTerminate(_: Notification) {
         parsingCoordinator.historyServer.stop()
         parsingPanelController?.dismiss(restoringFocus: false)
+        wordLookupPanelController?.dismiss(restoringFocus: false)
     }
 
     // MARK: - URL Scheme Handler
@@ -240,6 +244,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             guard let self else { return }
             Task { @MainActor in
                 self.parsingPanelController?.show()
+            }
+        }
+
+        KeyboardShortcuts.onKeyUp(for: .inputWordLookup) { [weak self] in
+            guard let self else { return }
+            Task { @MainActor in
+                self.wordLookupPanelController?.show()
             }
         }
 

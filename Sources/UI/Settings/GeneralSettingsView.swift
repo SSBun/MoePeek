@@ -5,6 +5,7 @@ import SwiftUI
 
 struct GeneralSettingsView: View {
     @Bindable var parsingCoordinator: ParsingCoordinator
+    @Bindable var wordLookupCoordinator: WordLookupCoordinator
     @Default(.targetLanguage) private var targetLanguage
     @Default(.isAutoDetectEnabled) private var isAutoDetectEnabled
     @Default(.textDetectionMode) private var textDetectionMode
@@ -43,6 +44,7 @@ struct GeneralSettingsView: View {
                 KeyboardShortcuts.Recorder("Screenshot OCR:", name: .ocrScreenshot)
                 KeyboardShortcuts.Recorder("Manual Translation:", name: .inputTranslation)
                 KeyboardShortcuts.Recorder("Text Parsing:", name: .inputParsing)
+                KeyboardShortcuts.Recorder("Word Translation:", name: .inputWordLookup)
                 KeyboardShortcuts.Recorder("Clipboard Translation:", name: .clipboardTranslation)
             }
 
@@ -141,6 +143,22 @@ struct GeneralSettingsView: View {
                 Button("Review English", action: parsingCoordinator.openHistory)
                 Button("Open Parsing History Folder", action: openParsingHistoryFolder)
                 Text("Parsing results are saved locally as daily JSONL files. Review them in your browser while MoePeek is running.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+
+            Section("Word Translation") {
+                Picker("Word Translation Provider", selection: $wordLookupCoordinator.selectedProviderID) {
+                    Text("Enabled LLMs (Default)").tag("")
+                    ForEach(wordLookupCoordinator.availableProviders, id: \.id) { provider in
+                        Text(provider.displayName).tag(provider.id)
+                    }
+                    if !wordLookupCoordinator.selectedProviderID.isEmpty,
+                       !wordLookupCoordinator.availableProviders.contains(where: { $0.id == wordLookupCoordinator.selectedProviderID }) {
+                        Text("Unavailable Provider").tag(wordLookupCoordinator.selectedProviderID)
+                    }
+                }
+                Text("Uses a separate dictionary prompt for pronunciation, Chinese meanings, and three bilingual examples. Translation and Parsing settings are unchanged.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }

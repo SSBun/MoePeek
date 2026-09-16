@@ -65,6 +65,8 @@ extension KeyboardShortcuts.Name {
     static let inputTranslation = Self("inputTranslation", default: .init(.a, modifiers: .option))
     /// 独立解析窗口的快捷键；默认未绑定，避免占用已有组合。
     static let inputParsing = Self("inputParsing")
+    /// 单词翻译的独立入口；默认不占用现有快捷键。
+    static let inputWordLookup = Self("inputWordLookup")
     static let clipboardTranslation = Self("clipboardTranslation", default: .init(.v, modifiers: .option))
 }
 
@@ -80,6 +82,8 @@ extension Defaults.Keys {
 
     /// 解析专用服务 ID；空值沿用已启用的 LLM，不改写翻译服务选择。
     static let parsingProviderID = Key<String>("parsingProviderID", default: "")
+    /// 单词翻译专用服务，空值跟随已启用的 LLM。
+    static let wordLookupProviderID = Key<String>("wordLookupProviderID", default: "")
     /// 空值使用翻译目标语言作为解析说明语言，不反向修改翻译偏好。
     static let parsingExplanationLanguage = Key<String>("parsingExplanationLanguage", default: "")
 

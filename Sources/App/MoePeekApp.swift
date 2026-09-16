@@ -15,6 +15,7 @@ struct MoePeekApp: App {
             SettingsView(
                 registry: appDelegate.registry,
                 parsingCoordinator: appDelegate.parsingCoordinator,
+                wordLookupCoordinator: appDelegate.wordLookupCoordinator,
                 updaterController: appDelegate.updaterController
             )
         }

@@ -11,6 +11,7 @@ struct CodexProvider: ParallelModelProvider {
     let iconAssetName: String? = "OpenAI"
     let supportsStreaming = true
     let supportsParsing = true
+    let supportsWordLookup = true
     let isAvailable = true
 
     let modelKey = Defaults.Key<String>("provider_codex_model", default: "gpt-5.4-mini")

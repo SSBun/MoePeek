@@ -1,6 +1,48 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "↵ Look Up · ⇧↵ Newline · ⌘↵ Copy & Close" : {
+      "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "↵ 查词 · ⇧↵ 换行 · ⌘↵ 复制并关闭" } } }
+    },
+    "Word Translation" : {
+      "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "单词翻译" } } }
+    },
+    "Word Translation:" : {
+      "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "单词翻译：" } } }
+    },
+    "Word Translation Provider" : {
+      "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "单词翻译服务" } } }
+    },
+    "Uses a separate dictionary prompt for pronunciation, Chinese meanings, and three bilingual examples. Translation and Parsing settings are unchanged." : {
+      "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "使用独立字典提示词，提供音标、中文释义和三组双语例句，不影响翻译与解析设置。" } } }
+    },
+    "Enter a word to look up." : {
+      "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "输入要查询的单词。" } } }
+    },
+    "Word to look up" : {
+      "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "待查询的单词" } } }
+    },
+    "Look Up" : {
+      "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "查词" } } }
+    },
+    "Looking up…" : {
+      "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "正在查词…" } } }
+    },
+    "Look up pronunciation, Chinese meanings, and three bilingual examples." : {
+      "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "查询音标、中文释义和三组双语例句。" } } }
+    },
+    "This provider does not support word translation." : {
+      "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "该服务不支持单词翻译。" } } }
+    },
+    "Selected word translation provider is unavailable. Choose another provider in Settings." : {
+      "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "所选单词翻译服务不可用，请在设置中选择其他服务。" } } }
+    },
+    "Word translation requires an LLM provider. Choose one in Settings." : {
+      "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "单词翻译需要大语言模型服务，请在设置中选择。" } } }
+    },
+    "Word translation returned an invalid entry. Try another word or retry." : {
+      "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "服务未返回完整有效的词条，请更换单词或重试。" } } }
+    },
     "Open Parsing History Folder" : {
       "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "打开解析记录文件夹" } } }
     },

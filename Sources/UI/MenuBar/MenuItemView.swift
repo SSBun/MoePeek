@@ -36,6 +36,13 @@ struct MenuItemView: View {
         .globalKeyboardShortcut(.inputParsing)
 
         Button {
+            appDelegate.wordLookupPanelController?.show()
+        } label: {
+            Label("Word Translation", systemImage: "character.book.closed")
+        }
+        .globalKeyboardShortcut(.inputWordLookup)
+
+        Button {
             appDelegate.parsingCoordinator.openHistory()
         } label: {
             Label("Review English", systemImage: "book")
