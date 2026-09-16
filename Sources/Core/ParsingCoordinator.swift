@@ -100,9 +100,9 @@ final class ParsingCoordinator {
 
     /// 仅选择与当前输入匹配的完成结果；优先顺序与面板中的服务顺序一致。
     func enterAction(for text: String) -> EnterAction {
-        guard submittedText == text.trimmingCharacters(in: .whitespacesAndNewlines) else { return .parse }
+        guard let submittedText, submittedText == text.trimmingCharacters(in: .whitespacesAndNewlines) else { return .parse }
         for provider in activeSlots {
-            if case let .completed(result) = providerStates[provider.id], let text = result.pasteText {
+            if case let .completed(result) = providerStates[provider.id], let text = result.pasteText(for: submittedText) {
                 return .paste(text)
             }
         }

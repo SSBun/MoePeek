@@ -138,39 +138,52 @@ private struct StyledParsingResultView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 5) {
-            Label {
-                Text(verbatim: "Writing tutor")
-            } icon: {
-                Image(systemName: "character.book.closed")
-            }
-            .fontWeight(.semibold)
-            .foregroundStyle(accentColor)
-
-            if !result.correctedText.isEmpty {
-                Text(verbatim: "◇ " + result.correctedText)
-                    .foregroundStyle(sentenceColor)
-            }
-            if let notice = result.notice {
-                Text(notice).foregroundStyle(explanationColor)
-            }
-            if let natural = result.naturalExpression {
-                Text(verbatim: "Natural expression").foregroundStyle(explanationColor)
-                Text(verbatim: "◇ " + natural).foregroundStyle(sentenceColor)
-            }
-            if !result.words.isEmpty {
-                Text(verbatim: "Words").foregroundStyle(explanationColor)
-                ForEach(Array(result.words.enumerated()), id: \.offset) { _, item in
-                    annotatedText(term: item.word, note: item.note)
+            switch result {
+            case let .check(items, rephrase):
+                header("Writing check", symbol: "pencil.and.outline")
+                if items.isEmpty, rephrase == nil {
+                    Text(result.plainText).foregroundStyle(explanationColor)
                 }
-            }
-            if !result.grammar.isEmpty {
-                Text(verbatim: "Grammar").foregroundStyle(explanationColor)
-                ForEach(Array(result.grammar.enumerated()), id: \.offset) { _, item in
-                    annotatedText(term: item.structure, note: item.note)
+                ForEach(Array(items.enumerated()), id: \.offset) { _, item in
+                    VStack(alignment: .leading, spacing: 1) {
+                        Text(item.wrong).foregroundStyle(.red).strikethrough()
+                            + Text(" → ").foregroundStyle(explanationColor)
+                            + Text(item.right).foregroundStyle(.green)
+                        if !item.reason.isEmpty {
+                            Text(item.reason).foregroundStyle(explanationColor)
+                        }
+                    }
                 }
+                if let rephrase {
+                    Text(verbatim: "◇ " + rephrase).foregroundStyle(sentenceColor)
+                }
+            case let .tutor(sentence, words, grammar):
+                header("Writing tutor", symbol: "character.book.closed")
+                Text(verbatim: "◇ " + sentence).foregroundStyle(sentenceColor)
+                if !words.isEmpty {
+                    Text(verbatim: "Words").foregroundStyle(explanationColor)
+                    ForEach(Array(words.enumerated()), id: \.offset) { _, item in
+                        annotatedText(term: item.word, note: item.note)
+                    }
+                }
+                if !grammar.isEmpty {
+                    Text(verbatim: "Grammar").foregroundStyle(explanationColor)
+                    ForEach(Array(grammar.enumerated()), id: \.offset) { _, item in
+                        annotatedText(term: item.structure, note: item.note)
+                    }
+                }
+            case .skip:
+                header("MoePeek", symbol: "forward")
+                Text(result.plainText).foregroundStyle(explanationColor)
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private func header(_ title: String, symbol: String) -> some View {
+        Label { Text(verbatim: title) } icon: { Image(systemName: symbol) }
+            .fontWeight(.semibold)
+            .foregroundStyle(accentColor)
     }
 
     private func annotatedText(term: String, note: String) -> Text {
