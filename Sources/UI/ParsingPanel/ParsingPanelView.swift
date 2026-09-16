@@ -48,7 +48,6 @@ struct ParsingPanelView: View {
         .padding(Self.contentPadding)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12))
-        .help("Return parses; Return again pastes a ready result back. Shift-Return adds a line; Esc closes.")
         .onPreferenceChange(ParsingResultsHeightKey.self) { height in
             guard height.isFinite else { return }
             resultsHeight = max(0, ceil(height))
