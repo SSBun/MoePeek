@@ -55,9 +55,10 @@ final class PopupDismissMonitor {
         }
 
         localKeyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
+            guard let self, event.window === self.panel else { return event }
             if event.keyCode == 53 { // Escape
                 Task { @MainActor in
-                    self?.onDismiss()
+                    self.onDismiss()
                 }
                 return nil // Consume the event
             }

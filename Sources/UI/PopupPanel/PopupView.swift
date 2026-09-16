@@ -9,6 +9,7 @@ struct PopupView: View {
     var onOpenSettings: (() -> Void)?
     var onCopyFirstAndDismiss: (() -> Void)?
     @Environment(\.openSettings) private var openSettings
+    @Environment(\.popupPanel) private var panel
     @State private var editableText: String = ""
     @State private var isOpeningSettings = false
     @State private var expandedProviders: Set<String> = []
@@ -127,6 +128,7 @@ struct PopupView: View {
         .onAppear {
             // Monitor for ⌘+Enter (copy & close), ⌘+1..9 (result copy or history shortcut)
             let monitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
+                guard let panel = self.panel, panel.isKeyWindow, event.window === panel else { return event }
                 let flags = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
 
                 // ⌘+Enter: copy first result and close
