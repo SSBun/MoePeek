@@ -1,0 +1,23 @@
+无修改结果返回nil=true，未创建目录=true
+无修改结果返回nil=true，未创建目录=true
+无修改结果返回nil=true，未创建目录=true
+已有文件追加无修改结果返回nil=true，字节保持一致=true
+有效记录行数=4，覆盖有纠错check、仅改写check、tutor、skip
+正式页首屏: {'days': 3, 'cards': 4, 'titles': ['Writing tutor', 'Writing check', 'Writing check', 'MoePeek'], 'font': '14px', 'sourceFont': '14px', 'allSourcesInCards': True, 'noopsVisible': False, 'details': 0, 'sidebar': 'block', 'hashHidden': True, 'status': '4 条解析'}
+语法搜索: {'cards': 1, 'status': '1 条解析 · 当天搜索结果'}
+无匹配: {'cards': 0, 'status': '没有匹配的解析，试试其他关键词。'}
+旧格式及分页: {'cards': 30, 'more': True, 'status': '33 条解析 2 条损坏或版本不支持的记录未显示，原文件已保留。', 'legacySentence': True, 'legacyNatural': True, 'legacyNotice': True, 'legacyWords': True, 'legacyGrammar': True, 'injected': False, 'scripts': 0, 'selected': '2026-09-15'}
+继续阅读: {'cards': 33, 'more': False}
+全部无修改的旧日期: {'cards': 0, 'status': '这一天没有需要复习的解析。', 'more': False}
+快速切换后最后日期: {'day': '2026-09-16', 'cards': 4, 'selected': '2026-09-16'}
+浅色: {'theme': 'light', 'accent': 'rgb(0, 102, 115)'}
+窄屏: {'viewport': 390, 'content': 390, 'sidebar': 'none', 'date': 'flex'}
+窄屏日期: {'cards': 0, 'selected': '2026-09-14'}
+刷新: {'cards': 4, 'days': 3}
+重新加载令牌恢复: {'cards': 4, 'status': '4 条解析'}
+无令牌API: 403
+令牌过期提示: {'cards': 0, 'searchDisabled': True, 'status': '访问已过期，请从 MoePeek 的「英语复习」重新打开页面。'}
+服务重启后读取: {'cards': 4, 'status': '4 条解析'}
+全部历史文件字节未修改: True
+空历史: {'cards': 0, 'dates': '暂无记录', 'dayDisabled': True, 'status': '还没有学习笔记。在 MoePeek 完成一次有学习内容的解析后，点击「刷新记录」。'}
+当前静态测试页: {'cards': 2, 'unchangedText': False}

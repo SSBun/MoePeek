@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; base-uri 'none'; form-action 'none'">
+<title>解析历史 · 卡片样式预览</title>
+<style>
+:root {
+  color-scheme: dark;
+  --background: #28282a;
+  --card-top: #29292a;
+  --card-bottom: #2b2b2c;
+  --border: #404042;
+  --text: #ededed;
+  --note: #a7a7a9;
+  --accent: #22d3de;
+  --sentence: #ffe000;
+  --wrong: #ff6961;
+  --right: #6bd579;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+:root[data-theme="light"] {
+  color-scheme: light;
+  --background: #f5f5f7;
+  --card-top: #fff;
+  --card-bottom: #fcfcfd;
+  --border: #dddddf;
+  --text: #252527;
+  --note: #5c5c5c;
+  --accent: #006673;
+  --sentence: #8c6600;
+  --wrong: #c52828;
+  --right: #217739;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--background); color: var(--text); }
+main { max-width: 1120px; margin: 0 auto; padding: 28px 28px 40px; }
+.workspace { display: grid; grid-template-columns: 150px minmax(0, 1fr); gap: 28px; }
+.sidebar { border-right: 1px solid var(--border); padding-right: 18px; }
+.sidebar h2 { margin: 0 0 12px; font-size: 12px; font-weight: 500; color: var(--note); }
+.sidebar button { display: block; width: 100%; padding: 9px; margin-bottom: 5px; border: 0; border-radius: 5px; background: transparent; color: var(--note); font: inherit; font-size: 12px; text-align: left; cursor: pointer; }
+.sidebar button[aria-pressed="true"] { background: var(--border); color: var(--text); }
+.date-field { display: none; }
+header { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 24px; }
+h1 { font-size: 15px; font-weight: 600; margin: 0; }
+.preview-label { font-size: 12px; color: var(--note); }
+form { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+label { color: var(--note); font-size: 12px; display: flex; align-items: center; gap: 8px; }
+select, input { font: inherit; font-size: 13px; color: var(--text); background: var(--card-top); border: 1px solid var(--border); border-radius: 7px; padding: 7px 10px; min-height: 34px; }
+.search { flex: 1; }
+input { width: 100%; min-width: 0; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
+#status { color: var(--note); font-size: 12px; margin: 16px 0 20px; }
+.entry { margin-bottom: 28px; }
+.meta { display: flex; align-items: baseline; gap: 16px; padding: 0 4px; margin-bottom: 9px; color: var(--note); font-size: 12px; }
+.card .source { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; font-size: 14px; font-weight: 400; color: var(--text); border-bottom: 1px solid var(--border); padding-bottom: 10px; margin-bottom: 5px; }
+.card {
+  background: linear-gradient(125deg, var(--card-top), var(--card-bottom));
+  border: 1px solid var(--border);
+  border-radius: 22px;
+  padding: 16px 20px;
+  font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.5;
+  color: var(--note);
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  overflow-wrap: anywhere;
+}
+.card h2 { font: inherit; font-weight: 600; color: var(--accent); display: flex; gap: 5px; align-items: center; margin: 0; }
+.card h2 svg { width: 15px; height: 15px; flex-shrink: 0; }
+.card p { margin: 0; white-space: pre-wrap; }
+.sentence { color: var(--sentence); }
+.term { color: var(--accent); }
+.wrong { color: var(--wrong); }
+.right { color: var(--right); }
+.correction { display: flex; flex-direction: column; gap: 1px; }
+footer { font-size: 12px; color: var(--note); }
+[hidden] { display: none !important; }
+@media (max-width: 600px) {
+  main { padding: 20px 14px; }
+  .workspace { display: block; }
+  .sidebar { display: none; }
+  .date-field { display: flex; }
+  header { flex-wrap: wrap; }
+  .search { order: 3; flex-basis: 100%; }
+  .card { padding: 16px; border-radius: 18px; font-size: 14px; }
+  .entry { margin-bottom: 22px; }
+}
+</style>
+</head>
+<body>
+<main>
+  <header><h1>解析历史</h1><span class="preview-label">样式预览 · 虚构数据</span></header>
+  <div class="workspace">
+  <aside class="sidebar" aria-label="日期导航">
+    <h2>日期</h2>
+    <button type="button" data-day="2026-09-16" aria-pressed="true">2026-09-16</button>
+    <button type="button" data-day="2026-09-15" aria-pressed="false">2026-09-15</button>
+  </aside>
+  <div class="content">
+  <form role="search">
+    <label class="date-field">日期<select id="day"><option>2026-09-16</option><option>2026-09-15</option></select></label>
+    <label class="search"><input id="search" type="search" aria-label="搜索当天内容" placeholder="搜索当天内容" autocomplete="off"></label>
+    <label>外观<select id="theme"><option value="dark">深色</option><option value="light">浅色</option></select></label>
+  </form>
+  <p id="status" role="status" aria-live="polite"></p>
+  <section aria-label="解析记录">
+    <article class="entry" data-day="2026-09-16">
+      <div class="meta"><time datetime="2026-09-16T10:42">10:42</time></div>
+      <div class="card">
+        <p class="source">这是个好问题。</p>
+        <h2><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true"><path d="M5 2h11v14H5a2 2 0 0 0 0 4h12M5 2a2 2 0 0 0-2 2v14M7 2v14M9 12l2-7 2 7m-3.5-2h3"/></svg>Writing tutor</h2>
+        <p class="sentence">◇ That's a good question.</p>
+        <p>Words</p>
+        <p><span class="term">That's</span>  that is 的缩略形式，口语中常用来承接对方刚说的话，比 This is 更自然地回指对方提出的内容。</p>
+        <p><span class="term">a good question</span>  固定搭配，表示“问得好/这个问题值得思考”，常用于对提问者的肯定，语气比 nice question 更常见。</p>
+        <p>Grammar</p>
+        <p><span class="term">主系表结构（Subject + be + Complement）</span>  英语中评价某事物时用 be 动词连接主语和表语，此处 That 指代对方的问题，is 后接名词短语作表语。</p>
+        <p><span class="term">指示代词 That 回指前文</span>  用 That 指代对方刚说过或问过的内容，相当于中文的“这/那（件事）”，因为话题刚被对方提出。</p>
+      </div>
+    </article>
+    <article class="entry" data-day="2026-09-16">
+      <div class="meta"><time datetime="2026-09-16T10:36">10:36</time></div>
+      <div class="card">
+        <p class="source">I have a good idea that MoePeek can provides a local server.</p>
+        <h2><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4l4 4M4 12l-1 5 5-1L17 7a2.8 2.8 0 0 0-4-4L4 12M11 17h6"/></svg>Writing check</h2>
+        <div class="correction"><p><del class="wrong">can provides</del> → <span class="right">can provide</span></p><p>情态动词 can 后接动词原形。</p></div>
+        <p class="sentence">◇ Here's an idea: MoePeek could provide a local server.</p>
+      </div>
+    </article>
+    <article class="entry" data-day="2026-09-15" hidden>
+      <div class="meta"><time datetime="2026-09-15T18:05">18:05</time></div>
+      <div class="card">
+        <p class="source">先把内容展示做好，其他功能可以以后再加。</p>
+        <h2><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true"><path d="M5 2h11v14H5a2 2 0 0 0 0 4h12M5 2a2 2 0 0 0-2 2v14M7 2v14M9 12l2-7 2 7m-3.5-2h3"/></svg>Writing tutor</h2>
+        <p class="sentence">◇ Let's get the content display right first. We can add other features later.</p>
+        <p>Words</p>
+        <p><span class="term">get … right</span>  把某件事做好，强调达到正确或满意的效果。</p>
+        <p><span class="term">later</span>  以后；用于说明不必现在就做。</p>
+        <p>Grammar</p>
+        <p><span class="term">Let's + 动词原形</span>  提出共同采取行动的建议。</p>
+      </div>
+    </article>
+    <article class="entry" data-day="2026-09-15" hidden>
+      <div class="meta"><time datetime="2026-09-15T17:52">17:52</time></div>
+      <div class="card">
+        <p class="source">const count = 3;</p>
+        <h2><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" aria-hidden="true"><path d="M3 5l7 5-7 5V5ZM10 5l7 5-7 5V5Z"/></svg>MoePeek</h2>
+        <p>内容过短、代码较多或不适合语言分析。</p>
+      </div>
+    </article>
+  </section>
+  <footer>仅用于确认卡片效果，不读取或修改真实历史。</footer>
+  </div>
+  </div>
+</main>
+<script>
+"use strict";
+const day = document.querySelector("#day");
+const search = document.querySelector("#search");
+const theme = document.querySelector("#theme");
+const entries = [...document.querySelectorAll(".entry")];
+function filterEntries() {
+  const query = search.value.trim().toLocaleLowerCase();
+  let count = 0;
+  for (const entry of entries) {
+    entry.hidden = entry.dataset.day !== day.value || !entry.textContent.toLocaleLowerCase().includes(query);
+    if (!entry.hidden) count++;
+  }
+  document.querySelector("#status").textContent = count ? `${count} 条解析` : "没有匹配的解析。";
+  for (const button of document.querySelectorAll(".sidebar button")) {
+    button.setAttribute("aria-pressed", String(button.dataset.day === day.value));
+  }
+}
+for (const button of document.querySelectorAll(".sidebar button")) {
+  button.addEventListener("click", () => { day.value = button.dataset.day; filterEntries(); });
+}
+day.addEventListener("change", filterEntries);
+search.addEventListener("input", filterEntries);
+theme.addEventListener("change", () => { document.documentElement.dataset.theme = theme.value; });
+document.querySelector("form").addEventListener("submit", event => event.preventDefault());
+filterEntries();
+</script>
+</body>
+</html>

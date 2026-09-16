@@ -1,0 +1,9 @@
+首次打开: {'visible': 3, 'theme': 'dark', 'titles': ['Writing tutor', 'Writing check', 'Writing check'], 'collapsedResults': 0, 'font': 'ui-monospace, SFMono-Regular, Menlo, Consolas, monospace', 'radius': '22px', 'gap': '5px'}
+原文与字号: {'allSourcesInCards': True, 'folding': 0, 'font': '14px', 'sourceFont': '14px', 'headingFont': '14px', 'sidebar': 'block'}
+关键词: {'visible': 1, 'status': '1 条解析'}
+无匹配: {'visible': 0, 'status': '没有匹配的解析。'}
+侧栏日期切换: {'day': '2026-09-15', 'selected': '2026-09-15', 'visible': 2, 'titles': ['Writing tutor', 'MoePeek']}
+浅色: {'theme': 'light', 'accent': 'rgb(0, 102, 115)'}
+窄屏: {'viewport': 390, 'content': 390, 'sidebar': 'none', 'dateSelector': 'flex'}
+窄屏日期切换: {'visible': 2, 'selected': '2026-09-15'}
+外部请求: []

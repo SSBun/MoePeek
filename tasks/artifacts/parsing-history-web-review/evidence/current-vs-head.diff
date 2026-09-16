@@ -1,0 +1,288 @@
+diff --git a/README_zh.md b/README_zh.md
+index 53dc3bb..7abe7e8 100644
+--- a/README_zh.md
++++ b/README_zh.md
+@@ -115,6 +115,9 @@ MoePeek 是一个纯 **AI vibe coding** 的自用项目。它能满足我个人
+ - 回填需要辅助功能权限和可验证的外部可编辑输入框。应用在打开时锁定应用、窗口、控件与可读取的选区；回填前重新核对。密码框、只读区域、已变化或不支持原生 Paste 的目标会被拒绝，不盲目写入其他位置。
+ - 回填把正文写入系统剪贴板，再执行原应用的正常 Paste 菜单动作，遵循原光标/选区；不会设置整框文本、发送全局按键或额外 Return。英文正文留在剪贴板中；若检测到外部剪贴板变化则停止，不覆盖用户的新复制内容。无法通过 AX 确认可编辑的终端/自定义控件可能需要手动粘贴。
+ - 结果仍可选择文字复制或右键 **复制**；右键复制保留全部解析信息，而非 JSON。两种复制都不应用译文首字母格式化，也不写入翻译历史。
++- **本地学习笔记**：每个完整且格式有效的解析结果都会按完成时的本地日期追加到 `~/Library/Application Support/MoePeek/ParsingHistory/YYYY-MM-DD.jsonl`。每行包含格式版本、唯一 ID、完成时间、原文、服务／模型信息，以及完整的结构化正文、自然表达、提示、词汇和语法；只有提示的结果也会保留，多模型结果分别记录。失败或取消且未产生完整结果的请求不记录。模型名取自提交时的快照，未指定时存为 `null`。已有 Markdown 文件保持原样，不自动迁移或在复习页展示。
++- 点击菜单栏的 **英语复习**，或 **设置 → 通用 → 解析 → 英语复习**，在浏览器中按日期阅读笔记、搜索当天内容并展开解析。页面不使用 CDN 或外部服务，历史不上传。只读 HTTP 服务按需启动，使用随机端口，仅监听 `127.0.0.1`；历史接口要求会话令牌，并检查 Host、Origin 和浏览器来源信息。退出 MoePeek 后服务关闭，重启后从应用重新打开页面即可读取之前保存的 JSONL。
++- **打开解析记录文件夹** 仍可打开实际存储目录。这些文件是本地明文，请留意备份和共享范围。写入失败（包括取锁超过一秒）会在解析面板提示，结果仍可复制使用。损坏或版本不支持的 JSONL 行会在页面显示跳过数量，不修改源文件；单日文件超过 64 MiB 时页面会明确提示读取失败，原始记录不会截断。
+ - 若提示没有可用 LLM，从菜单栏打开设置，在通用页选择解析服务，或到服务页配置对应账户/模型。
+ 
+ ### DeepSeek 思考模式
+diff --git a/Resources/Localizable.xcstrings b/Resources/Localizable.xcstrings
+index 5323fa8..f396fbc 100644
+--- a/Resources/Localizable.xcstrings
++++ b/Resources/Localizable.xcstrings
+@@ -1,6 +1,27 @@
+ {
+   "sourceLanguage" : "en",
+   "strings" : {
++    "Open Parsing History Folder" : {
++      "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "打开解析记录文件夹" } } }
++    },
++    "Review English" : {
++      "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "英语复习" } } }
++    },
++    "Parsing results are saved locally as daily JSONL files. Review them in your browser while MoePeek is running." : {
++      "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "解析结果按天保存为本地 JSONL 文件。保持 MoePeek 运行，即可在浏览器中复习。" } } }
++    },
++    "Could not open parsing review." : {
++      "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "无法打开英语复习页面。" } } }
++    },
++    "Please try again. Your saved parsing history has not been changed." : {
++      "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "请重试。已保存的解析记录未被修改。" } } }
++    },
++    "Could not open parsing history folder." : {
++      "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "无法打开解析记录文件夹，请检查目录权限。" } } }
++    },
++    "Could not save parsing history. The result is still available; copy it before closing." : {
++      "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "解析记录保存失败。结果仍可使用，请在关闭前复制保存。" } } }
++    },
+     "Enable Accessibility to paste back." : {
+       "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "请授予辅助功能权限后再回填。" } } }
+     },
+diff --git a/Sources/App/AppDelegate.swift b/Sources/App/AppDelegate.swift
+index b0e7c77..22f1beb 100644
+--- a/Sources/App/AppDelegate.swift
++++ b/Sources/App/AppDelegate.swift
+@@ -61,6 +61,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
+     }
+ 
+     func applicationWillTerminate(_: Notification) {
++        parsingCoordinator.historyServer.stop()
+         parsingPanelController?.dismiss(restoringFocus: false)
+     }
+ 
+diff --git a/Sources/Core/ParsingCoordinator.swift b/Sources/Core/ParsingCoordinator.swift
+index 08a9939..f838b5e 100644
+--- a/Sources/Core/ParsingCoordinator.swift
++++ b/Sources/Core/ParsingCoordinator.swift
+@@ -1,5 +1,7 @@
++import AppKit
+ import Defaults
+ import Foundation
++import OSLog
+ 
+ /// 独立解析会话；只共享服务注册表，不读写翻译会话或翻译历史。
+ @MainActor
+@@ -30,6 +32,10 @@ final class ParsingCoordinator {
+     private(set) var activeSlots: [any TranslationProvider] = []
+     private(set) var providerStates: [String: ProviderState] = [:]
+     private(set) var globalError: String?
++    private(set) var historyError: String?
++    let historyStore: ParsingHistoryStore
++    let historyServer: ParsingHistoryServer
++    private static let logger = Logger(subsystem: "com.nahida.MoePeek", category: "ParsingHistory")
+     /// 解析专用选择；变更时保存并立即取消旧会话，空值保留原有跟随行为。
+     var selectedProviderID: String {
+         didSet {
+@@ -58,12 +64,30 @@ final class ParsingCoordinator {
+     private var generation = 0
+     private var submittedText: String?
+ 
+-    init(registry: TranslationProviderRegistry) {
++    init(registry: TranslationProviderRegistry, historyStore: ParsingHistoryStore = ParsingHistoryStore()) {
+         self.registry = registry
++        self.historyStore = historyStore
++        historyServer = ParsingHistoryServer(store: historyStore)
+         selectedProviderID = Defaults[.parsingProviderID]
+         selectedExplanationLanguage = Defaults[.parsingExplanationLanguage]
+     }
+ 
++    /// 在系统浏览器中打开本地学习页，启动失败时提供可见反馈。
++    func openHistory() {
++        Task { [weak self] in
++            guard let self else { return }
++            do {
++                let url = try await self.historyServer.start()
++                guard NSWorkspace.shared.open(url) else { throw CocoaError(.featureUnsupported) }
++            } catch {
++                let alert = NSAlert()
++                alert.messageText = String(localized: "Could not open parsing review.")
++                alert.informativeText = String(localized: "Please try again. Your saved parsing history has not been changed.")
++                alert.runModal()
++            }
++        }
++    }
++
+     /// 仅处理新面板明确提交的文本，不读取辅助功能控件或剪贴板。
+     func parse(_ text: String) {
+         reset()
+@@ -132,15 +156,25 @@ final class ParsingCoordinator {
+         activeSlots = []
+         providerStates = [:]
+         globalError = nil
++        historyError = nil
+         submittedText = nil
+     }
+ 
+     private func start(_ provider: any TranslationProvider, text: String, source: String?, language: String) {
++        // 同一快照同时用于请求与历史，不能在结果完成后重读已变化的偏好。
++        let model: String?
++        if let slot = provider as? ModelSlotProvider {
++            model = slot.modelOverride
++        } else if let provider = provider as? any ParallelModelProvider {
++            model = Defaults[provider.modelKey]
++        } else {
++            model = nil
++        }
+         let generation = generation
+         providerStates[provider.id] = .waiting
+         tasks[provider.id] = Task { [weak self] in
+             guard let self else { return }
+-            await self.run(provider, text: text, source: source, language: language, generation: generation)
++            await self.run(provider, text: text, source: source, language: language, model: model, generation: generation)
+         }
+     }
+ 
+@@ -149,6 +183,7 @@ final class ParsingCoordinator {
+         text: String,
+         source: String?,
+         language: String,
++        model: String?,
+         generation: Int
+     ) async {
+         guard !Task.isCancelled, generation == self.generation else { return }
+@@ -160,7 +195,7 @@ final class ParsingCoordinator {
+         providerStates[provider.id] = .parsing
+         do {
+             var content = ""
+-            for try await chunk in provider.processStream(text, from: source, to: language, mode: .parsing, model: nil) {
++            for try await chunk in provider.processStream(text, from: source, to: language, mode: .parsing, model: model) {
+                 guard !Task.isCancelled, generation == self.generation else { return }
+                 guard !chunk.isEmpty else { continue }
+                 content += chunk
+@@ -169,6 +204,31 @@ final class ParsingCoordinator {
+             if content.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                 providerStates[provider.id] = .error(String(localized: "Parsing returned empty result"))
+             } else if let result = ParsingResult.decode(content) {
++                let completedAt = Date()
++                let providerName = provider.displayName
++                let providerID = provider.id
++                // 完整结果的保存拥有独立生命周期，不加入 reset() 取消的请求任务。
++                // 非结构化 Task 不继承调用任务的取消；旧会话仍由下方代次检查隔离 UI。
++                let save = Task { [historyStore] in
++                    try await historyStore.append(
++                        sourceText: text,
++                        result: result,
++                        providerName: providerName,
++                        providerID: providerID,
++                        model: model,
++                        date: completedAt
++                    )
++                }
++                do {
++                    _ = try await save.value
++                } catch {
++                    let failure = error as NSError
++                    Self.logger.error("append.failed domain=\(failure.domain, privacy: .public) code=\(failure.code)")
++                    if !Task.isCancelled, generation == self.generation {
++                        historyError = String(localized: "Could not save parsing history. The result is still available; copy it before closing.")
++                    }
++                }
++                guard !Task.isCancelled, generation == self.generation else { return }
+                 providerStates[provider.id] = .completed(result)
+             } else {
+                 providerStates[provider.id] = .error(String(localized: "Parsing returned an invalid result format. Please submit again."))
+diff --git a/Sources/Core/ParsingResult.swift b/Sources/Core/ParsingResult.swift
+index da3f10a..827a6ec 100644
+--- a/Sources/Core/ParsingResult.swift
++++ b/Sources/Core/ParsingResult.swift
+@@ -1,13 +1,13 @@
+ import Foundation
+ 
+ /// 用于 Writing tutor 展示的结构化解析结果，不包含界面装饰或原始响应。
+-struct ParsingResult: Decodable, Equatable, Sendable {
+-    struct Word: Decodable, Equatable, Sendable {
++struct ParsingResult: Codable, Equatable, Sendable {
++    struct Word: Codable, Equatable, Sendable {
+         let word: String
+         let note: String
+     }
+ 
+-    struct Grammar: Decodable, Equatable, Sendable {
++    struct Grammar: Codable, Equatable, Sendable {
+         let structure: String
+         let note: String
+     }
+diff --git a/Sources/UI/MenuBar/MenuItemView.swift b/Sources/UI/MenuBar/MenuItemView.swift
+index 8849596..5367ee4 100644
+--- a/Sources/UI/MenuBar/MenuItemView.swift
++++ b/Sources/UI/MenuBar/MenuItemView.swift
+@@ -35,6 +35,12 @@ struct MenuItemView: View {
+         }
+         .globalKeyboardShortcut(.inputParsing)
+ 
++        Button {
++            appDelegate.parsingCoordinator.openHistory()
++        } label: {
++            Label("Review English", systemImage: "book")
++        }
++
+         Button {
+             guard let coordinator = appDelegate.coordinator,
+                   let panelController = appDelegate.panelController else { return }
+diff --git a/Sources/UI/ParsingPanel/ParsingPanelView.swift b/Sources/UI/ParsingPanel/ParsingPanelView.swift
+index 8ef4a54..8dd5d34 100644
+--- a/Sources/UI/ParsingPanel/ParsingPanelView.swift
++++ b/Sources/UI/ParsingPanel/ParsingPanelView.swift
+@@ -88,6 +88,9 @@ struct ParsingPanelView: View {
+             if let error = coordinator.globalError {
+                 Text(error).foregroundStyle(.red)
+             }
++            if let error = coordinator.historyError {
++                Text(error).foregroundStyle(.red)
++            }
+             ForEach(coordinator.activeSlots, id: \.id) { provider in
+                 if let state = coordinator.providerStates[provider.id] {
+                     VStack(alignment: .leading, spacing: 4) {
+diff --git a/Sources/UI/Settings/GeneralSettingsView.swift b/Sources/UI/Settings/GeneralSettingsView.swift
+index e8a969a..a07589d 100644
+--- a/Sources/UI/Settings/GeneralSettingsView.swift
++++ b/Sources/UI/Settings/GeneralSettingsView.swift
+@@ -32,6 +32,7 @@ struct GeneralSettingsView: View {
+ 
+     @State private var launchAtLogin = SMAppService.mainApp.status == .enabled
+     @State private var showRestartAlert = false
++    @State private var showHistoryFolderError = false
+     @State private var availableFonts = NSFontManager.shared.availableFontFamilies
+     @State private var availableInputSources: [KeyboardInputSource] = []
+ 
+@@ -136,6 +137,12 @@ struct GeneralSettingsView: View {
+                 Text("Chinese input becomes natural English; English input is analyzed directly. This setting only controls the explanation language.")
+                     .font(.caption)
+                     .foregroundStyle(.secondary)
++
++                Button("Review English", action: parsingCoordinator.openHistory)
++                Button("Open Parsing History Folder", action: openParsingHistoryFolder)
++                Text("Parsing results are saved locally as daily JSONL files. Review them in your browser while MoePeek is running.")
++                    .font(.caption)
++                    .foregroundStyle(.secondary)
+             }
+ 
+             Section("Language Detection") {
+@@ -213,6 +220,21 @@ struct GeneralSettingsView: View {
+         } message: {
+             Text("Changing language requires restarting the app.")
+         }
++        .alert("Could not open parsing history folder.", isPresented: $showHistoryFolderError) {
++            Button("OK", role: .cancel) { }
++        }
++    }
++
++    /// 即使尚无记录，也创建并打开同一个实际存储目录。
++    private func openParsingHistoryFolder() {
++        Task { @MainActor in
++            do {
++                let directory = try await parsingCoordinator.historyStore.prepareDirectory()
++                showHistoryFolderError = !NSWorkspace.shared.open(directory)
++            } catch {
++                showHistoryFolderError = true
++            }
++        }
+     }
+ }
+ 

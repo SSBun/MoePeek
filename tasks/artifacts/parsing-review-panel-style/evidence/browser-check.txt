@@ -1,0 +1,20 @@
+a-panel 载入: {'entries': 3, 'headings': ['Writing check', 'Writing tutor', 'Writing check'], 'font': 'ui-monospace, SFMono-Regular, Menlo, Consolas, monospace', 'gap': '5px', 'folding': 0}
+a-panel 搜索: {'entries': 1, 'status': '1 条示例 · 内容默认展开'}
+a-panel 无匹配: {'entries': 0, 'status': '没有匹配的示例。'}
+a-panel 次日: {'entries': 2, 'headings': ['Writing tutor', 'MoePeek'], 'skip': True}
+a-panel 深色: {'theme': 'dark', 'sentence': 'rgb(255, 214, 10)'}
+a-panel 窄屏: {'viewport': 390, 'content': 390, 'dateVisible': 'block'}
+b-compact 载入: {'entries': 3, 'headings': ['Writing check', 'Writing tutor', 'Writing check'], 'font': 'ui-monospace, SFMono-Regular, Menlo, Consolas, monospace', 'gap': '5px', 'folding': 0}
+b-compact 搜索: {'entries': 1, 'status': '1 条示例 · 内容默认展开'}
+b-compact 无匹配: {'entries': 0, 'status': '没有匹配的示例。'}
+b-compact 次日: {'entries': 2, 'headings': ['Writing tutor', 'MoePeek'], 'skip': True}
+b-compact 深色: {'theme': 'dark', 'sentence': 'rgb(255, 214, 10)'}
+b-compact 窄屏: {'viewport': 390, 'content': 390, 'dateVisible': 'block'}
+c-sidebar 载入: {'entries': 3, 'headings': ['Writing check', 'Writing tutor', 'Writing check'], 'font': 'ui-monospace, SFMono-Regular, Menlo, Consolas, monospace', 'gap': '5px', 'folding': 0}
+c-sidebar 搜索: {'entries': 1, 'status': '1 条示例 · 内容默认展开'}
+c-sidebar 无匹配: {'entries': 0, 'status': '没有匹配的示例。'}
+c-sidebar 次日: {'entries': 2, 'headings': ['Writing tutor', 'MoePeek'], 'skip': True}
+侧栏切换: {'day': '2026-09-16', 'entries': 3}
+c-sidebar 深色: {'theme': 'dark', 'sentence': 'rgb(255, 214, 10)'}
+c-sidebar 窄屏: {'viewport': 390, 'content': 390, 'dateVisible': 'block'}
+三个示例的解析正文完全一致: True

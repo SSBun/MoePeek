@@ -1,0 +1,477 @@
+--- before/Resources/parsing-history.html
++++ after/Resources/parsing-history.html
+@@ -8,22 +8,26 @@
+   <script src="/history.js" defer></script>
+ </head>
+ <body>
+-  <header><a class="brand" href="/index.html">MoePeek <span>学习笔记</span></a><span class="local">仅在本机 · 离线可读</span></header>
+   <main>
+-    <section class="intro" aria-labelledby="title">
+-      <p class="eyebrow">温故，知新。</p>
+-      <h1 id="title">把看过的英文，变成自己的表达。</h1>
+-      <p>先读原句，试着想一想，再展开解析。每一次小小的积累，都留在这里。</p>
+-    </section>
+-    <form class="toolbar" role="search">
+-      <label>学习日期<select id="day" disabled><option>暂无记录</option></select></label>
+-      <label class="search">查找笔记<input id="search" type="search" placeholder="搜索当天的原句、词汇或语法…" autocomplete="off"></label>
+-      <button type="button" id="refresh">刷新记录</button>
+-    </form>
+-    <p id="status" role="status" aria-live="polite">正在读取学习笔记…</p>
+-    <div id="entries"></div>
+-    <button type="button" id="more" hidden>继续阅读</button>
+-    <footer>笔记保存在你的 Mac 上。旧版 Markdown 文件仍保留在历史目录中，不在此页显示。</footer>
++    <header><h1>解析历史</h1><span class="local">MoePeek · 仅在本机</span></header>
++    <div class="workspace">
++      <aside class="sidebar" aria-label="日期导航">
++        <h2>日期</h2>
++        <nav id="dates" aria-label="学习日期"></nav>
++      </aside>
++      <div class="content">
++        <form role="search">
++          <label class="date-field">日期<select id="day" disabled><option value="">暂无记录</option></select></label>
++          <label class="search"><input id="search" type="search" placeholder="搜索当天内容" aria-label="搜索当天内容" autocomplete="off" disabled></label>
++          <label>外观<select id="theme"><option value="dark">深色</option><option value="light">浅色</option></select></label>
++          <button type="button" id="refresh">刷新记录</button>
++        </form>
++        <p id="status" role="status" aria-live="polite">正在读取解析记录…</p>
++        <section id="entries" aria-label="解析记录"></section>
++        <button type="button" id="more" hidden>继续阅读</button>
++        <footer>记录保存在本机。无纠错、无改写的检查结果不记录、不展示；已有文件保持原样。</footer>
++      </div>
++    </div>
+   </main>
+ </body>
+ </html>
+--- before/Resources/parsing-history.css
++++ after/Resources/parsing-history.css
+@@ -1,40 +1,89 @@
+-:root { color-scheme: light dark; --bg: #faf9f6; --paper: #fff; --ink: #292d29; --muted: #646b63; --line: #dedfd7; --accent: #436448; --soft: #eff3eb; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
++:root {
++  color-scheme: dark;
++  --background: #28282a;
++  --card-top: #29292a;
++  --card-bottom: #2b2b2c;
++  --border: #404042;
++  --text: #ededed;
++  --note: #a7a7a9;
++  --accent: #22d3de;
++  --sentence: #ffe000;
++  --wrong: #ff6961;
++  --right: #6bd579;
++  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
++}
++:root[data-theme="light"] {
++  color-scheme: light;
++  --background: #f5f5f7;
++  --card-top: #fff;
++  --card-bottom: #fcfcfd;
++  --border: #dddddf;
++  --text: #252527;
++  --note: #5c5c5c;
++  --accent: #006673;
++  --sentence: #8c6600;
++  --wrong: #c52828;
++  --right: #217739;
++}
+ * { box-sizing: border-box; }
+-body { margin: 0; background: var(--bg); color: var(--ink); font-size: 15px; line-height: 1.7; }
+-header { padding: 20px 5vw; border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; align-items: center; gap: 16px; }
+-a { color: inherit; text-decoration: none; }
+-.brand { font-weight: 700; letter-spacing: -.03em; font-size: 20px; }
+-.brand span { font-size: 13px; font-weight: 400; color: var(--muted); margin-left: 12px; letter-spacing: 0; }
+-.local, footer { color: var(--muted); font-size: 12px; }
+-main { max-width: 920px; margin: 0 auto; padding: 52px 24px; }
+-h1 { font-size: clamp(24px, 4vw, 36px); line-height: 1.4; font-weight: 650; letter-spacing: -.035em; margin: 8px 0 16px; }
+-.intro > p:last-child { color: var(--muted); }
+-.eyebrow { color: var(--accent); font-size: 13px; font-weight: 600; }
+-.toolbar { display: flex; gap: 16px; align-items: end; margin: 36px 0 16px; }
+-label { display: flex; flex-direction: column; gap: 6px; color: var(--muted); font-size: 12px; }
++body { margin: 0; background: var(--background); color: var(--text); }
++main { max-width: 1120px; margin: 0 auto; padding: 28px 28px 40px; }
++header { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 24px; }
++h1 { font-size: 15px; font-weight: 600; margin: 0; }
++.local { font-size: 12px; color: var(--note); }
++.workspace { display: grid; grid-template-columns: 150px minmax(0, 1fr); gap: 28px; }
++.sidebar { border-right: 1px solid var(--border); padding-right: 18px; }
++.sidebar h2 { margin: 0 0 12px; font-size: 12px; font-weight: 500; color: var(--note); }
++#dates { display: flex; flex-direction: column; gap: 5px; }
++#dates button { width: 100%; padding: 9px; border: 0; border-radius: 5px; background: transparent; color: var(--note); font-size: 12px; text-align: left; }
++#dates button[aria-pressed="true"] { background: var(--border); color: var(--text); }
++.date-field { display: none; }
++form { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
++label { color: var(--note); font-size: 12px; display: flex; align-items: center; gap: 8px; }
++select, input, button { font: inherit; font-size: 13px; color: var(--text); background: var(--card-top); border: 1px solid var(--border); border-radius: 7px; padding: 7px 10px; min-height: 34px; }
++button { cursor: pointer; }
++button:hover { background: var(--border); }
++:disabled { cursor: default; opacity: .6; }
+ .search { flex: 1; }
+-input, select, button { font: inherit; font-size: 14px; color: var(--ink); background: var(--paper); border: 1px solid var(--line); border-radius: 8px; min-height: 42px; padding: 9px 12px; }
+-input { width: 100%; }
+-button, summary { cursor: pointer; }
+-button:hover { background: var(--soft); }
+-:focus-visible { outline: 3px solid var(--accent); outline-offset: 4px; }
+-:disabled { cursor: default; opacity: .6; }
+-#status { color: var(--muted); font-size: 13px; min-height: 24px; }
+-.card { background: var(--paper); border: 1px solid var(--line); border-radius: 12px; padding: 28px 30px; margin: 20px 0; overflow-wrap: anywhere; }
+-.card .meta { font-size: 12px; color: var(--muted); margin: 0 0 12px; }
+-.source { white-space: pre-wrap; font-family: Charter, Georgia, serif; font-size: 23px; font-weight: 400; line-height: 1.65; margin: 0 0 22px; }
+-summary { color: var(--accent); font-size: 14px; padding: 8px 0; }
+-details[open] > summary { margin-bottom: 20px; border-bottom: 1px solid var(--line); padding-bottom: 16px; }
+-h3 { font-size: 12px; color: var(--muted); font-weight: 500; margin: 24px 0 8px; }
+-.expression { font-family: Charter, Georgia, serif; font-size: 21px; line-height: 1.6; padding: 16px 20px; border-left: 3px solid var(--accent); background: var(--soft); white-space: pre-wrap; }
+-.note { white-space: pre-wrap; margin: 8px 0; }
+-dl { margin: 0; }
+-.term { padding: 12px 0; border-bottom: 1px solid var(--line); }
+-.term:last-child { border: 0; }
+-dt { color: var(--accent); font-weight: 600; white-space: pre-wrap; }
+-dd { margin: 4px 0 0; white-space: pre-wrap; }
+-footer { margin-top: 40px; }
+-#more { display: block; margin: 24px auto; }
++input { width: 100%; min-width: 0; }
++:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
++#status { color: var(--note); font-size: 12px; line-height: 1.5; margin: 16px 0 20px; }
++.entry { margin-bottom: 28px; }
++.meta { padding: 0 4px; margin: 0 0 9px; color: var(--note); font-size: 12px; overflow-wrap: anywhere; }
++.card {
++  background: linear-gradient(125deg, var(--card-top), var(--card-bottom));
++  border: 1px solid var(--border);
++  border-radius: 22px;
++  padding: 16px 20px;
++  font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
++  font-size: 14px;
++  font-weight: 400;
++  line-height: 1.5;
++  color: var(--note);
++  display: flex;
++  flex-direction: column;
++  gap: 5px;
++  overflow-wrap: anywhere;
++}
++.card .source { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; font-size: 14px; font-weight: 400; color: var(--text); border-bottom: 1px solid var(--border); padding-bottom: 10px; margin: 0 0 5px; white-space: pre-wrap; }
++.result-title { font: inherit; font-weight: 600; color: var(--accent); display: flex; gap: 5px; align-items: center; margin: 0; }
++.result-title svg { width: 15px; height: 15px; flex-shrink: 0; }
++.card p { margin: 0; white-space: pre-wrap; }
++.sentence { color: var(--sentence); }
++.term { color: var(--accent); }
++.wrong { color: var(--wrong); }
++.right { color: var(--right); }
++.correction { display: flex; flex-direction: column; gap: 1px; }
++footer { font-size: 12px; line-height: 1.6; color: var(--note); }
++#more { display: block; margin: 0 auto 24px; }
+ [hidden] { display: none !important; }
+-@media (max-width: 620px) { main { padding: 28px 16px; } .toolbar { flex-wrap: wrap; } .search { flex-basis: 100%; order: 3; } .card { padding: 20px; } .local { display: none; } .source { font-size: 21px; } }
+-@media (prefers-color-scheme: dark) { :root { --bg: #1d201d; --paper: #252a25; --ink: #e7ebe4; --muted: #afb9ab; --line: #424b40; --accent: #b0cf9e; --soft: #2e372d; } }
++@media (max-width: 650px) {
++  main { padding: 20px 14px; }
++  .workspace { display: block; }
++  .sidebar { display: none; }
++  .date-field { display: flex; }
++  header { flex-wrap: wrap; }
++  .search { order: 3; flex-basis: 100%; }
++  .card { padding: 16px; border-radius: 18px; }
++  .entry { margin-bottom: 22px; }
++}
+--- before/Resources/parsing-history.js
++++ after/Resources/parsing-history.js
+@@ -1,11 +1,13 @@
+ "use strict";
+ 
+ const daySelect = document.querySelector("#day");
++const dates = document.querySelector("#dates");
+ const search = document.querySelector("#search");
+ const status = document.querySelector("#status");
+ const entries = document.querySelector("#entries");
+ const more = document.querySelector("#more");
+ const refresh = document.querySelector("#refresh");
++const theme = document.querySelector("#theme");
+ let token = location.hash.slice(1);
+ try {
+   if (token) sessionStorage.setItem("moepeek-review-token", token);
+@@ -60,6 +62,12 @@
+   }
+ }
+ 
++function hasReviewContent(entry) {
++  // 只过滤明确的无修改 check，不根据旧版讲解文本猜测记录含义。
++  return entry.schemaVersion !== 2 || entry.result.mode !== "check"
++    || entry.result.items.length > 0 || Boolean(entry.result.rephrase?.trim());
++}
++
+ function resultSearchParts(entry) {
+   const result = entry.result;
+   if (entry.schemaVersion === 1) {
+@@ -70,65 +78,115 @@
+     case "check": return [result.rephrase, ...result.items.flatMap(item => [item.wrong, item.right, item.reason])];
+     case "tutor": return [result.sentence, ...result.words.flatMap(word => [word.word, word.note]),
+       ...result.grammar.flatMap(item => [item.structure, item.note])];
+-    default: return ["跳过"];
+-  }
+-}
+-
+-function addSection(parent, title, text, className = "note") {
+-  if (!text) return;
+-  parent.append(element("h3", title), element("p", text, className));
++    default: return ["内容过短、代码较多或不适合语言分析。", "跳过"];
++  }
++}
++
++function resultHeader(mode) {
++  const heading = element("h3", undefined, "result-title");
++  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
++  svg.setAttribute("viewBox", "0 0 20 20");
++  svg.setAttribute("fill", "none");
++  svg.setAttribute("stroke", "currentColor");
++  svg.setAttribute("stroke-width", "1.5");
++  svg.setAttribute("stroke-linecap", "round");
++  svg.setAttribute("stroke-linejoin", "round");
++  svg.setAttribute("aria-hidden", "true");
++  const path = document.createElementNS(svg.namespaceURI, "path");
++  path.setAttribute("d", {
++    check: "M12 4l4 4M4 12l-1 5 5-1L17 7a2.8 2.8 0 0 0-4-4L4 12M11 17h6",
++    tutor: "M5 2h11v14H5a2 2 0 0 0 0 4h12M5 2a2 2 0 0 0-2 2v14M7 2v14M9 12l2-7 2 7m-3.5-2h3",
++    skip: "M3 5l7 5-7 5V5ZM10 5l7 5-7 5V5Z",
++  }[mode]);
++  svg.append(path);
++  heading.append(svg, element("span", { check: "Writing check", tutor: "Writing tutor", skip: "MoePeek" }[mode]));
++  return heading;
++}
++
++function addSentence(parent, text) {
++  if (text) parent.append(element("p", "◇ " + text, "sentence"));
+ }
+ 
+ function addTerms(parent, title, terms, key) {
+   if (!terms.length) return;
+-  parent.append(element("h3", title));
+-  const list = element("dl");
++  parent.append(element("p", title));
+   for (const term of terms) {
+-    const row = element("div", undefined, "term");
+-    row.append(element("dt", term[key]), element("dd", term.note));
+-    list.append(row);
+-  }
+-  parent.append(list);
+-}
+-
+-function card(entry, index) {
+-  const article = element("article", undefined, "card");
++    const line = element("p");
++    line.append(element("span", term[key], "term"), document.createTextNode("  " + term.note));
++    parent.append(line);
++  }
++}
++
++function card(entry) {
++  const article = element("article", undefined, "entry");
+   const time = new Date(entry.completedAt);
+   const model = typeof entry.model === "string" && entry.model ? ` · ${entry.model}` : "";
+-  article.append(element("p", `${String(index + 1).padStart(2, "0")} · ${Number.isNaN(time.getTime()) ? "" : time.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })} · ${entry.providerName}${model}`, "meta"));
+-  article.append(element("h2", entry.sourceText, "source"));
+-  const detail = element("details");
+-  detail.append(element("summary", "展开解析 · 对照自己的理解"));
++  const timestamp = Number.isNaN(time.getTime()) ? "" : time.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
++  article.append(element("p", `${timestamp} · ${entry.providerName}${model}`, "meta"));
++  const body = element("div", undefined, "card");
++  body.append(element("h2", entry.sourceText, "source"));
+   const result = entry.result;
+   if (entry.schemaVersion === 1) {
+-    addSection(detail, "英文正文", result.correctedText, "expression");
+-    addSection(detail, "更自然的表达", result.naturalExpression, "expression");
+-    addSection(detail, "学习提示", result.notice);
+-    addTerms(detail, "词汇与短语", result.words, "word");
+-    addTerms(detail, "句子结构与语法", result.grammar, "structure");
+-  } else if (result.mode === "check") {
+-    addSection(detail, "英文检查", result.items.length || result.rephrase ? "纠错与建议" : "表达自然，无需修改。");
+-    for (const item of result.items) addSection(detail, `${item.wrong} → ${item.right}`, item.reason || "纠正表达");
+-    addSection(detail, "建议改写", result.rephrase, "expression");
+-  } else if (result.mode === "tutor") {
+-    addSection(detail, "英文正文", result.sentence, "expression");
+-    addTerms(detail, "词汇与短语", result.words, "word");
+-    addTerms(detail, "句子结构与语法", result.grammar, "structure");
++    body.append(resultHeader(result.correctedText || result.naturalExpression ? "tutor" : "skip"));
++    addSentence(body, result.correctedText);
++    if (result.notice) body.append(element("p", result.notice));
++    if (result.naturalExpression) {
++      body.append(element("p", "Natural expression"));
++      addSentence(body, result.naturalExpression);
++    }
++    addTerms(body, "Words", result.words, "word");
++    addTerms(body, "Grammar", result.grammar, "structure");
+   } else {
+-    addSection(detail, "已跳过", "内容过短、代码较多或不适合语言分析。");
+-  }
+-  article.append(detail);
++    body.append(resultHeader(result.mode));
++    if (result.mode === "check") {
++      for (const item of result.items) {
++        const correction = element("div", undefined, "correction");
++        const line = element("p");
++        line.append(element("del", item.wrong, "wrong"), document.createTextNode(" → "), element("span", item.right, "right"));
++        correction.append(line);
++        if (item.reason) correction.append(element("p", item.reason));
++        body.append(correction);
++      }
++      addSentence(body, result.rephrase);
++    } else if (result.mode === "tutor") {
++      addSentence(body, result.sentence);
++      addTerms(body, "Words", result.words, "word");
++      addTerms(body, "Grammar", result.grammar, "structure");
++    } else {
++      body.append(element("p", "内容过短、代码较多或不适合语言分析。"));
++    }
++  }
++  article.append(body);
+   return article;
+ }
+ 
+ function render() {
+   const query = search.value.trim().toLocaleLowerCase();
+   const filtered = records.filter(entry => entry.searchText.includes(query));
+-  entries.replaceChildren(...filtered.slice(0, visibleCount).map((entry, index) => card(entry.record, index)));
++  entries.replaceChildren(...filtered.slice(0, visibleCount).map(entry => card(entry.record)));
+   more.hidden = filtered.length <= visibleCount;
+   const warning = skipped ? ` ${skipped} 条损坏或版本不支持的记录未显示，原文件已保留。` : "";
+-  status.textContent = (filtered.length ? `${filtered.length} 条学习笔记${query ? " · 当天搜索结果" : " · 先回想，再展开"}`
+-    : records.length ? "没有匹配的笔记，试试其他关键词。" : "这一天还没有学习笔记。") + warning;
++  status.textContent = (filtered.length ? `${filtered.length} 条解析${query ? " · 当天搜索结果" : ""}`
++    : records.length ? "没有匹配的解析，试试其他关键词。" : "这一天没有需要复习的解析。") + warning;
++}
++
++function updateSelectedDay() {
++  for (const button of dates.querySelectorAll("button")) {
++    button.setAttribute("aria-pressed", String(button.dataset.day === daySelect.value));
++  }
++}
++
++function renderDates(days) {
++  dates.replaceChildren();
++  for (const day of days) {
++    const button = element("button", day);
++    button.type = "button";
++    button.dataset.day = day;
++    button.addEventListener("click", () => { daySelect.value = day; load(); });
++    dates.append(button);
++  }
++  if (!days.length) dates.append(element("span", "暂无记录", "local"));
++  updateSelectedDay();
+ }
+ 
+ async function load(reloadDays = false) {
+@@ -136,13 +194,15 @@
+   controller?.abort();
+   controller = new AbortController();
+   const signal = controller.signal;
++  let loaded = false;
+   entries.replaceChildren();
+   more.hidden = true;
+   records = [];
+   skipped = 0;
+   search.disabled = true;
+   refresh.disabled = true;
+-  status.textContent = "正在读取学习笔记…";
++  updateSelectedDay();
++  status.textContent = "正在读取解析记录…";
+   try {
+     if (!token) throw new Error("请从 MoePeek 菜单中的「英语复习」打开此页。");
+     if (reloadDays) {
+@@ -155,10 +215,11 @@
+       daySelect.replaceChildren(...days.map(day => { const option = element("option", day); option.value = day; return option; }));
+       daySelect.disabled = !days.length;
+       if (days.includes(previous)) daySelect.value = previous;
+-      if (!days.length) {
+-        status.textContent = "还没有学习笔记。在 MoePeek 完成一次解析后，点击「刷新记录」。";
+-        return;
+-      }
++      renderDates(days);
++    }
++    if (!daySelect.value) {
++      status.textContent = "还没有学习笔记。在 MoePeek 完成一次有学习内容的解析后，点击「刷新记录」。";
++      return;
+     }
+     const text = await (await request(`/api/history/${daySelect.value}`, signal)).text();
+     if (current !== generation) return;
+@@ -167,6 +228,7 @@
+       try {
+         const record = JSON.parse(line);
+         if (!validRecord(record)) { skipped++; continue; }
++        if (!hasReviewContent(record)) continue;
+         const searchText = [record.sourceText, ...resultSearchParts(record)]
+           .filter(Boolean).join("\n").toLocaleLowerCase();
+         records.push({ record, searchText });
+@@ -174,12 +236,13 @@
+     }
+     records.reverse();
+     visibleCount = 30;
++    loaded = true;
+     render();
+   } catch (error) {
+     if (current !== generation || error.name === "AbortError") return;
+     status.textContent = error instanceof TypeError ? "无法连接 MoePeek。请保持应用运行，并从菜单重新打开「英语复习」。" : error.message;
+   } finally {
+-    if (current === generation) { search.disabled = false; refresh.disabled = false; }
++    if (current === generation) { search.disabled = !loaded; refresh.disabled = false; }
+   }
+ }
+ 
+@@ -188,4 +251,6 @@
+ refresh.addEventListener("click", () => load(true));
+ search.addEventListener("input", () => { visibleCount = 30; render(); });
+ more.addEventListener("click", () => { visibleCount += 30; render(); });
++theme.addEventListener("change", () => { document.documentElement.dataset.theme = theme.value; });
++document.documentElement.dataset.theme = theme.value;
+ load(true);
+--- before/Sources/Utilities/ParsingHistoryStore.swift
++++ after/Sources/Utilities/ParsingHistoryStore.swift
+@@ -30,7 +30,7 @@
+         return directoryURL
+     }
+ 
+-    /// 追加一个已完成结果；返回实际日期文件，便于核验跨日归档。
++    /// 追加已完成结果；无需修改的 check 返回 nil，且不创建目录或文件。
+     @discardableResult
+     func append(
+         sourceText: String,
+@@ -40,7 +40,12 @@
+         model: String? = nil,
+         date: Date = Date(),
+         timeZone: TimeZone = .current
+-    ) async throws -> URL {
++    ) async throws -> URL? {
++        if case let .check(items, rephrase) = result,
++           items.isEmpty,
++           rephrase?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ?? true {
++            return nil
++        }
+         let formatter = DateFormatter()
+         formatter.locale = Locale(identifier: "en_US_POSIX")
+         formatter.calendar = Calendar(identifier: .gregorian)
+--- before/README_zh.md
++++ after/README_zh.md
+@@ -116,8 +116,8 @@
+ - 回填需要辅助功能权限和可验证的外部可编辑输入框。应用在打开时锁定应用、窗口、控件与可读取的选区；回填前重新核对。密码框、只读区域、已变化或不支持原生 Paste 的目标会被拒绝，不盲目写入其他位置。
+ - 回填把正文写入系统剪贴板，再执行原应用的正常 Paste 菜单动作，遵循原光标/选区；不会设置整框文本、发送全局按键或额外 Return。英文正文留在剪贴板中；若检测到外部剪贴板变化则停止，不覆盖用户的新复制内容。无法通过 AX 确认可编辑的终端/自定义控件可能需要手动粘贴。
+ - 结果仍可选择文字复制或右键 **复制**；右键复制保留全部解析信息，而非 JSON。两种复制都不应用译文首字母格式化，也不写入翻译历史。
+-- **本地学习笔记**：每个完整且格式有效的解析结果都会按完成时的本地日期追加到 `~/Library/Application Support/MoePeek/ParsingHistory/YYYY-MM-DD.jsonl`。每行包含格式版本、唯一 ID、完成时间、原文、服务／模型信息，以及对应的完整 `check` / `tutor` / `skip` 结果；跳过结果也会保留，多模型结果分别记录。新记录采用 `schemaVersion: 2`，复习页继续兼容旧 `schemaVersion: 1` 的正文／自然表达格式，旧 JSONL 不迁移或改写。失败或取消且未产生完整结果的请求不记录。模型名取自提交时的快照，未指定时存为 `null`。已有 Markdown 文件保持原样，不自动迁移或在复习页展示。
+-- 点击菜单栏的 **英语复习**，或 **设置 → 通用 → 解析 → 英语复习**，在浏览器中按日期阅读笔记、搜索当天内容并展开解析。页面不使用 CDN 或外部服务，历史不上传。只读 HTTP 服务按需启动，使用随机端口，仅监听 `127.0.0.1`；历史接口要求会话令牌，并检查 Host、Origin 和浏览器来源信息。退出 MoePeek 后服务关闭，重启后从应用重新打开页面即可读取之前保存的 JSONL。
++- **本地学习笔记**：完整且格式有效的解析结果按完成时的本地日期追加到 `~/Library/Application Support/MoePeek/ParsingHistory/YYYY-MM-DD.jsonl`。每行包含格式版本、唯一 ID、完成时间、原文、服务／模型信息，以及对应的完整 `check` / `tutor` / `skip` 结果；**没有纠错项且没有有效改写建议的 Writing check 不保存**（空白改写也视为没有建议）。旧文件中的此类记录仅在网页中过滤，不删除或改写历史；tutor 和 skip 沿用原有保存规则，多模型结果分别记录。新记录采用 `schemaVersion: 2`，复习页继续兼容旧 `schemaVersion: 1` 的正文／自然表达格式，旧 JSONL 不迁移或改写。失败或取消且未产生完整结果的请求不记录。模型名取自提交时的快照，未指定时存为 `null`。已有 Markdown 文件保持原样，不自动迁移或在复习页展示。
++- 点击菜单栏的 **英语复习**，或 **设置 → 通用 → 解析 → 英语复习**，在浏览器中通过左侧日期栏阅读笔记、搜索当天内容。原文与解析在同一张圆角卡片中直接展示，内容采用 14px 字号；解析保留原生面板的等宽字体及青色、黄色、红绿纠错配色，支持深浅色切换。窄屏时日期改为顶部选择器。页面不使用 CDN 或外部服务，历史不上传。只读 HTTP 服务按需启动，使用随机端口，仅监听 `127.0.0.1`；历史接口要求会话令牌，并检查 Host、Origin 和浏览器来源信息。退出 MoePeek 后服务关闭，重启后从应用重新打开页面即可读取之前保存的 JSONL。
+ - **打开解析记录文件夹** 仍可打开实际存储目录。这些文件是本地明文，请留意备份和共享范围。写入失败（包括取锁超过一秒）会在解析面板提示，结果仍可复制使用。损坏或版本不支持的 JSONL 行会在页面显示跳过数量，不修改源文件；单日文件超过 64 MiB 时页面会明确提示读取失败，原始记录不会截断。
+ - 若提示没有可用 LLM，从菜单栏打开设置，在通用页选择解析服务，或到服务页配置对应账户/模型。
+ 
+--- before/tasks/artifacts/parsing-history-reference-cards/specs/preview.html
++++ after/tasks/artifacts/parsing-history-reference-cards/specs/preview.html
+@@ -132,14 +132,6 @@
+         <p class="sentence">◇ Here's an idea: MoePeek could provide a local server.</p>
+       </div>
+     </article>
+-    <article class="entry" data-day="2026-09-16">
+-      <div class="meta"><time datetime="2026-09-16T10:21">10:21</time></div>
+-      <div class="card">
+-        <p class="source">The current layout looks good to me.</p>
+-        <h2><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4l4 4M4 12l-1 5 5-1L17 7a2.8 2.8 0 0 0-4-4L4 12M11 17h6"/></svg>Writing check</h2>
+-        <p>表达自然，无需修改。</p>
+-      </div>
+-    </article>
+     <article class="entry" data-day="2026-09-15" hidden>
+       <div class="meta"><time datetime="2026-09-15T18:05">18:05</time></div>
+       <div class="card">

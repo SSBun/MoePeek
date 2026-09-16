@@ -1,0 +1,106 @@
+{
+  "head": "ae2a110fcdafb00d32c4081296315188c1d5c1fd",
+  "baseline": "/tmp/moepeek-word-baseline.IyYMdx",
+  "files": [
+    {
+      "path": "Resources/Localizable.xcstrings",
+      "sha256": "a53eb4544709126217bcaa2b94566f29d9f8d0c7888e683d2398887e4bf52b84",
+      "baselineSHA256": "8c23ca3c2cad07edc514de72071e036c6d5bb804db6bfc44044aa1989e681f6c"
+    },
+    {
+      "path": "Sources/App/AppDelegate.swift",
+      "sha256": "83e311c748f43ff463d087a59d4aefee214a02d10511d378a700a54da9a3c8d2",
+      "baselineSHA256": "67adb97799ad54bf3e5c8f7c6b3c157457a0bea58cd4d6f6168822ccc2e7d47f"
+    },
+    {
+      "path": "Sources/App/MoePeekApp.swift",
+      "sha256": "6a28283a9e841623f82e9c2ae170700a4d9dbd8826a47501fe47736d0e795703",
+      "baselineSHA256": "e00ce7bd4995fdcaae9b9d29fe316646e3445c00ad0fbfb497d4dc898e6caf1f"
+    },
+    {
+      "path": "Sources/Core/WordLookupCoordinator.swift",
+      "sha256": "1fa73bcf9d7aaaee804cafe9e2ac4150165b481a485458a32904681cb410da95",
+      "baselineSHA256": null
+    },
+    {
+      "path": "Sources/Core/WordLookupResult.swift",
+      "sha256": "a8696546f56072e7ec65ee18d1694182a0a50e8a57773987ba458622ac0b1a95",
+      "baselineSHA256": null
+    },
+    {
+      "path": "Sources/Services/Providers/AnthropicProvider.swift",
+      "sha256": "42c604a1dac540f26a4081415842cc8152c822d8ea0f7eae8a63afec645b0f41",
+      "baselineSHA256": "7b1d0245093023a1c2d354c62d9f9392494c918a37e655384c54ea481ca47bfe"
+    },
+    {
+      "path": "Sources/Services/Providers/CodexProvider.swift",
+      "sha256": "8fb396146bd48e09e59e9fdd0419c53538ae175d0d2d38873a799efa62982922",
+      "baselineSHA256": "332df3e423d265c16145b4ddae909ac1c94980a8448cc0023e7987b1506eb644"
+    },
+    {
+      "path": "Sources/Services/Providers/LMStudioProvider.swift",
+      "sha256": "e580b289ab4da567e640d441b59f57a935d2eeedda862100daf24ccc7a131fc6",
+      "baselineSHA256": "434d57aaf38e48d738837f2cb0e1d80d1ad466c2f147343199f3a4e54f4c890b"
+    },
+    {
+      "path": "Sources/Services/Providers/OllamaProvider.swift",
+      "sha256": "43384c7e89a3ce354adfd62014e633698c790b0ed0627682ede584595b439489",
+      "baselineSHA256": "f201bee027dbbb5fcb0d977f5fc1d704a7e6eda519776231d2b66037bb68b45b"
+    },
+    {
+      "path": "Sources/Services/Providers/OpenAICompatibleProvider.swift",
+      "sha256": "ee67636ac906962a27eaf4a15c197a35bc80ed4c57a6bb12c38a333a39cf86bb",
+      "baselineSHA256": "ec8bf5abd2797bf1147c23adcd450298b3a62e2461d3e54f502a302adab53a1d"
+    },
+    {
+      "path": "Sources/Services/TranslationProvider.swift",
+      "sha256": "82969fb509d011524857be69db8ac4989e9a17b176e4d2a7cc5a6f7918301b1a",
+      "baselineSHA256": "f37ad71637d910712415039591007fcc813385466991464f2a7f146f11226140"
+    },
+    {
+      "path": "Sources/UI/MenuBar/MenuItemView.swift",
+      "sha256": "065108f0d567f96e052d34d3c095acc74fc193e25ddb0679b5c2ca5dbe129fa9",
+      "baselineSHA256": "e8b3da26200bc26b843fbca57482afaad3354cf7762601cb141a0c5a14c5d4f1"
+    },
+    {
+      "path": "Sources/UI/PopupDismissMonitor.swift",
+      "sha256": "cdc14dbab9b774e07cfe455dcaa3cbe726b555998aba1be6f00bb17af5f7faa5",
+      "baselineSHA256": "4680f2bde1dec2f8a2d650b434df188e159fdab6eb19216e30a9d587730038c1"
+    },
+    {
+      "path": "Sources/UI/PopupPanel/PopupView.swift",
+      "sha256": "4018c9571e4dbf2080e78d9ca163bc15477cdb88fe47d8330e7b1165bd69829f",
+      "baselineSHA256": "b6a8367944fe4f378f3db8e44c75105d69caba8f0c2f2281a2e2573638ac79ac"
+    },
+    {
+      "path": "Sources/UI/PopupPanel/SourceInputView.swift",
+      "sha256": "a53c9b9557037db7cf0fe1ba0b8a7bc2619466efb07bcba94a82f79d209e1e8c",
+      "baselineSHA256": "96f27d0878d81cc9a10b17ced85d976ca24c321eb2695c89f6e9c538e8f25208"
+    },
+    {
+      "path": "Sources/UI/Settings/GeneralSettingsView.swift",
+      "sha256": "cf696cc017e9b8d2d1a813124b5c2c6ed68b2b2b4846da37244b37fd12c515ce",
+      "baselineSHA256": "f04daae43bd611fcc48771e764e24bf4b6fae7ef28444dc0ff444285a4d25421"
+    },
+    {
+      "path": "Sources/UI/Settings/SettingsView.swift",
+      "sha256": "5583238064377fac59c30ae8270d5543e0d3f63fb5ec7ae8ad25f7cbc37efd6a",
+      "baselineSHA256": "d2c0b794c3cdd4f284e57b10cc36643c2b794dea9353883ea2dfe5e6d303bb01"
+    },
+    {
+      "path": "Sources/UI/WordLookupPanel/WordLookupPanelController.swift",
+      "sha256": "72e0ece4ddea9f0fcacfcd6b4c26876f7118d6a8deb340a9f20b07bb37d5c449",
+      "baselineSHA256": null
+    },
+    {
+      "path": "Sources/UI/WordLookupPanel/WordLookupPanelView.swift",
+      "sha256": "1931977748c433eb2851960d104e5fe3749632437243b4785b6c75a9730796a3",
+      "baselineSHA256": null
+    },
+    {
+      "path": "Sources/Utilities/Constants.swift",
+      "sha256": "6984a362ad5e314f9a5e760cd84da001a4c16d73a40d9a19f5f0310f1cba1600",
+      "baselineSHA256": "52c596eb4c3401c80cc2498250ba630e6f2a2d627f74b705811a4879763979a9"
+    }
+  ]
+}
