@@ -30,7 +30,7 @@ actor ParsingHistoryStore {
         return directoryURL
     }
 
-    /// 追加一个已完成结果；返回实际日期文件，便于核验跨日归档。
+    /// 追加已完成结果；无需修改的 check 返回 nil，且不创建目录或文件。
     @discardableResult
     func append(
         sourceText: String,
@@ -40,7 +40,12 @@ actor ParsingHistoryStore {
         model: String? = nil,
         date: Date = Date(),
         timeZone: TimeZone = .current
-    ) async throws -> URL {
+    ) async throws -> URL? {
+        if case let .check(items, rephrase) = result,
+           items.isEmpty,
+           rephrase?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ?? true {
+            return nil
+        }
         let formatter = DateFormatter()
         formatter.locale = Locale(identifier: "en_US_POSIX")
         formatter.calendar = Calendar(identifier: .gregorian)

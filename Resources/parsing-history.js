@@ -1,11 +1,13 @@
 "use strict";
 
 const daySelect = document.querySelector("#day");
+const dates = document.querySelector("#dates");
 const search = document.querySelector("#search");
 const status = document.querySelector("#status");
 const entries = document.querySelector("#entries");
 const more = document.querySelector("#more");
 const refresh = document.querySelector("#refresh");
+const theme = document.querySelector("#theme");
 let token = location.hash.slice(1);
 try {
   if (token) sessionStorage.setItem("moepeek-review-token", token);
@@ -60,6 +62,12 @@ function validRecord(entry) {
   }
 }
 
+function hasReviewContent(entry) {
+  // 只过滤明确的无修改 check，不根据旧版讲解文本猜测记录含义。
+  return entry.schemaVersion !== 2 || entry.result.mode !== "check"
+    || entry.result.items.length > 0 || Boolean(entry.result.rephrase?.trim());
+}
+
 function resultSearchParts(entry) {
   const result = entry.result;
   if (entry.schemaVersion === 1) {
@@ -70,65 +78,115 @@ function resultSearchParts(entry) {
     case "check": return [result.rephrase, ...result.items.flatMap(item => [item.wrong, item.right, item.reason])];
     case "tutor": return [result.sentence, ...result.words.flatMap(word => [word.word, word.note]),
       ...result.grammar.flatMap(item => [item.structure, item.note])];
-    default: return ["跳过"];
+    default: return ["内容过短、代码较多或不适合语言分析。", "跳过"];
   }
 }
 
-function addSection(parent, title, text, className = "note") {
-  if (!text) return;
-  parent.append(element("h3", title), element("p", text, className));
+function resultHeader(mode) {
+  const heading = element("h3", undefined, "result-title");
+  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  svg.setAttribute("viewBox", "0 0 20 20");
+  svg.setAttribute("fill", "none");
+  svg.setAttribute("stroke", "currentColor");
+  svg.setAttribute("stroke-width", "1.5");
+  svg.setAttribute("stroke-linecap", "round");
+  svg.setAttribute("stroke-linejoin", "round");
+  svg.setAttribute("aria-hidden", "true");
+  const path = document.createElementNS(svg.namespaceURI, "path");
+  path.setAttribute("d", {
+    check: "M12 4l4 4M4 12l-1 5 5-1L17 7a2.8 2.8 0 0 0-4-4L4 12M11 17h6",
+    tutor: "M5 2h11v14H5a2 2 0 0 0 0 4h12M5 2a2 2 0 0 0-2 2v14M7 2v14M9 12l2-7 2 7m-3.5-2h3",
+    skip: "M3 5l7 5-7 5V5ZM10 5l7 5-7 5V5Z",
+  }[mode]);
+  svg.append(path);
+  heading.append(svg, element("span", { check: "Writing check", tutor: "Writing tutor", skip: "MoePeek" }[mode]));
+  return heading;
+}
+
+function addSentence(parent, text) {
+  if (text) parent.append(element("p", "◇ " + text, "sentence"));
 }
 
 function addTerms(parent, title, terms, key) {
   if (!terms.length) return;
-  parent.append(element("h3", title));
-  const list = element("dl");
+  parent.append(element("p", title));
   for (const term of terms) {
-    const row = element("div", undefined, "term");
-    row.append(element("dt", term[key]), element("dd", term.note));
-    list.append(row);
+    const line = element("p");
+    line.append(element("span", term[key], "term"), document.createTextNode("  " + term.note));
+    parent.append(line);
   }
-  parent.append(list);
 }
 
-function card(entry, index) {
-  const article = element("article", undefined, "card");
+function card(entry) {
+  const article = element("article", undefined, "entry");
   const time = new Date(entry.completedAt);
   const model = typeof entry.model === "string" && entry.model ? ` · ${entry.model}` : "";
-  article.append(element("p", `${String(index + 1).padStart(2, "0")} · ${Number.isNaN(time.getTime()) ? "" : time.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })} · ${entry.providerName}${model}`, "meta"));
-  article.append(element("h2", entry.sourceText, "source"));
-  const detail = element("details");
-  detail.append(element("summary", "展开解析 · 对照自己的理解"));
+  const timestamp = Number.isNaN(time.getTime()) ? "" : time.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  article.append(element("p", `${timestamp} · ${entry.providerName}${model}`, "meta"));
+  const body = element("div", undefined, "card");
+  body.append(element("h2", entry.sourceText, "source"));
   const result = entry.result;
   if (entry.schemaVersion === 1) {
-    addSection(detail, "英文正文", result.correctedText, "expression");
-    addSection(detail, "更自然的表达", result.naturalExpression, "expression");
-    addSection(detail, "学习提示", result.notice);
-    addTerms(detail, "词汇与短语", result.words, "word");
-    addTerms(detail, "句子结构与语法", result.grammar, "structure");
-  } else if (result.mode === "check") {
-    addSection(detail, "英文检查", result.items.length || result.rephrase ? "纠错与建议" : "表达自然，无需修改。");
-    for (const item of result.items) addSection(detail, `${item.wrong} → ${item.right}`, item.reason || "纠正表达");
-    addSection(detail, "建议改写", result.rephrase, "expression");
-  } else if (result.mode === "tutor") {
-    addSection(detail, "英文正文", result.sentence, "expression");
-    addTerms(detail, "词汇与短语", result.words, "word");
-    addTerms(detail, "句子结构与语法", result.grammar, "structure");
+    body.append(resultHeader(result.correctedText || result.naturalExpression ? "tutor" : "skip"));
+    addSentence(body, result.correctedText);
+    if (result.notice) body.append(element("p", result.notice));
+    if (result.naturalExpression) {
+      body.append(element("p", "Natural expression"));
+      addSentence(body, result.naturalExpression);
+    }
+    addTerms(body, "Words", result.words, "word");
+    addTerms(body, "Grammar", result.grammar, "structure");
   } else {
-    addSection(detail, "已跳过", "内容过短、代码较多或不适合语言分析。");
+    body.append(resultHeader(result.mode));
+    if (result.mode === "check") {
+      for (const item of result.items) {
+        const correction = element("div", undefined, "correction");
+        const line = element("p");
+        line.append(element("del", item.wrong, "wrong"), document.createTextNode(" → "), element("span", item.right, "right"));
+        correction.append(line);
+        if (item.reason) correction.append(element("p", item.reason));
+        body.append(correction);
+      }
+      addSentence(body, result.rephrase);
+    } else if (result.mode === "tutor") {
+      addSentence(body, result.sentence);
+      addTerms(body, "Words", result.words, "word");
+      addTerms(body, "Grammar", result.grammar, "structure");
+    } else {
+      body.append(element("p", "内容过短、代码较多或不适合语言分析。"));
+    }
   }
-  article.append(detail);
+  article.append(body);
   return article;
 }
 
 function render() {
   const query = search.value.trim().toLocaleLowerCase();
   const filtered = records.filter(entry => entry.searchText.includes(query));
-  entries.replaceChildren(...filtered.slice(0, visibleCount).map((entry, index) => card(entry.record, index)));
+  entries.replaceChildren(...filtered.slice(0, visibleCount).map(entry => card(entry.record)));
   more.hidden = filtered.length <= visibleCount;
   const warning = skipped ? ` ${skipped} 条损坏或版本不支持的记录未显示，原文件已保留。` : "";
-  status.textContent = (filtered.length ? `${filtered.length} 条学习笔记${query ? " · 当天搜索结果" : " · 先回想，再展开"}`
-    : records.length ? "没有匹配的笔记，试试其他关键词。" : "这一天还没有学习笔记。") + warning;
+  status.textContent = (filtered.length ? `${filtered.length} 条解析${query ? " · 当天搜索结果" : ""}`
+    : records.length ? "没有匹配的解析，试试其他关键词。" : "这一天没有需要复习的解析。") + warning;
+}
+
+function updateSelectedDay() {
+  for (const button of dates.querySelectorAll("button")) {
+    button.setAttribute("aria-pressed", String(button.dataset.day === daySelect.value));
+  }
+}
+
+function renderDates(days) {
+  dates.replaceChildren();
+  for (const day of days) {
+    const button = element("button", day);
+    button.type = "button";
+    button.dataset.day = day;
+    button.addEventListener("click", () => { daySelect.value = day; load(); });
+    dates.append(button);
+  }
+  if (!days.length) dates.append(element("span", "暂无记录", "local"));
+  updateSelectedDay();
 }
 
 async function load(reloadDays = false) {
@@ -136,13 +194,15 @@ async function load(reloadDays = false) {
   controller?.abort();
   controller = new AbortController();
   const signal = controller.signal;
+  let loaded = false;
   entries.replaceChildren();
   more.hidden = true;
   records = [];
   skipped = 0;
   search.disabled = true;
   refresh.disabled = true;
-  status.textContent = "正在读取学习笔记…";
+  updateSelectedDay();
+  status.textContent = "正在读取解析记录…";
   try {
     if (!token) throw new Error("请从 MoePeek 菜单中的「英语复习」打开此页。");
     if (reloadDays) {
@@ -155,10 +215,11 @@ async function load(reloadDays = false) {
       daySelect.replaceChildren(...days.map(day => { const option = element("option", day); option.value = day; return option; }));
       daySelect.disabled = !days.length;
       if (days.includes(previous)) daySelect.value = previous;
-      if (!days.length) {
-        status.textContent = "还没有学习笔记。在 MoePeek 完成一次解析后，点击「刷新记录」。";
-        return;
-      }
+      renderDates(days);
+    }
+    if (!daySelect.value) {
+      status.textContent = "还没有学习笔记。在 MoePeek 完成一次有学习内容的解析后，点击「刷新记录」。";
+      return;
     }
     const text = await (await request(`/api/history/${daySelect.value}`, signal)).text();
     if (current !== generation) return;
@@ -167,6 +228,7 @@ async function load(reloadDays = false) {
       try {
         const record = JSON.parse(line);
         if (!validRecord(record)) { skipped++; continue; }
+        if (!hasReviewContent(record)) continue;
         const searchText = [record.sourceText, ...resultSearchParts(record)]
           .filter(Boolean).join("\n").toLocaleLowerCase();
         records.push({ record, searchText });
@@ -174,12 +236,13 @@ async function load(reloadDays = false) {
     }
     records.reverse();
     visibleCount = 30;
+    loaded = true;
     render();
   } catch (error) {
     if (current !== generation || error.name === "AbortError") return;
     status.textContent = error instanceof TypeError ? "无法连接 MoePeek。请保持应用运行，并从菜单重新打开「英语复习」。" : error.message;
   } finally {
-    if (current === generation) { search.disabled = false; refresh.disabled = false; }
+    if (current === generation) { search.disabled = !loaded; refresh.disabled = false; }
   }
 }
 
@@ -188,4 +251,6 @@ daySelect.addEventListener("change", () => load());
 refresh.addEventListener("click", () => load(true));
 search.addEventListener("input", () => { visibleCount = 30; render(); });
 more.addEventListener("click", () => { visibleCount += 30; render(); });
+theme.addEventListener("change", () => { document.documentElement.dataset.theme = theme.value; });
+document.documentElement.dataset.theme = theme.value;
 load(true);

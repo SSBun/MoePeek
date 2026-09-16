@@ -8,22 +8,26 @@
   <script src="/history.js" defer></script>
 </head>
 <body>
-  <header><a class="brand" href="/index.html">MoePeek <span>学习笔记</span></a><span class="local">仅在本机 · 离线可读</span></header>
   <main>
-    <section class="intro" aria-labelledby="title">
-      <p class="eyebrow">温故，知新。</p>
-      <h1 id="title">把看过的英文，变成自己的表达。</h1>
-      <p>先读原句，试着想一想，再展开解析。每一次小小的积累，都留在这里。</p>
-    </section>
-    <form class="toolbar" role="search">
-      <label>学习日期<select id="day" disabled><option>暂无记录</option></select></label>
-      <label class="search">查找笔记<input id="search" type="search" placeholder="搜索当天的原句、词汇或语法…" autocomplete="off"></label>
-      <button type="button" id="refresh">刷新记录</button>
-    </form>
-    <p id="status" role="status" aria-live="polite">正在读取学习笔记…</p>
-    <div id="entries"></div>
-    <button type="button" id="more" hidden>继续阅读</button>
-    <footer>笔记保存在你的 Mac 上。旧版 Markdown 文件仍保留在历史目录中，不在此页显示。</footer>
+    <header><h1>解析历史</h1><span class="local">MoePeek · 仅在本机</span></header>
+    <div class="workspace">
+      <aside class="sidebar" aria-label="日期导航">
+        <h2>日期</h2>
+        <nav id="dates" aria-label="学习日期"></nav>
+      </aside>
+      <div class="content">
+        <form role="search">
+          <label class="date-field">日期<select id="day" disabled><option value="">暂无记录</option></select></label>
+          <label class="search"><input id="search" type="search" placeholder="搜索当天内容" aria-label="搜索当天内容" autocomplete="off" disabled></label>
+          <label>外观<select id="theme"><option value="dark">深色</option><option value="light">浅色</option></select></label>
+          <button type="button" id="refresh">刷新记录</button>
+        </form>
+        <p id="status" role="status" aria-live="polite">正在读取解析记录…</p>
+        <section id="entries" aria-label="解析记录"></section>
+        <button type="button" id="more" hidden>继续阅读</button>
+        <footer>记录保存在本机。无纠错、无改写的检查结果不记录、不展示；已有文件保持原样。</footer>
+      </div>
+    </div>
   </main>
 </body>
 </html>
