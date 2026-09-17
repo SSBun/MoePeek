@@ -12,7 +12,7 @@ struct OllamaProvider: ParallelModelProvider {
     let category: ProviderCategory = .llm
     let supportsStreaming = true
     let supportsParsing = true
-    let supportsWordLookup = true
+    let supportsSmartTranslation = true
     let isAvailable = true
 
     let baseURLKey = Defaults.Key<String>("provider_ollama_baseURL", default: "http://localhost:11434")

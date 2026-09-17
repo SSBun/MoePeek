@@ -11,7 +11,7 @@ struct OpenAICompatibleProvider: ParallelModelProvider {
     let isCustom: Bool
     let supportsStreaming = true
     let supportsParsing = true
-    let supportsWordLookup = true
+    let supportsSmartTranslation = true
     let isAvailable = true
 
     /// Extra HTTP headers to add to all requests (e.g. OpenRouter's X-Title for app attribution).

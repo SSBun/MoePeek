@@ -5,7 +5,7 @@ import SwiftUI
 
 struct GeneralSettingsView: View {
     @Bindable var parsingCoordinator: ParsingCoordinator
-    @Bindable var wordLookupCoordinator: WordLookupCoordinator
+    @Bindable var smartTranslationCoordinator: SmartTranslationCoordinator
     @Default(.targetLanguage) private var targetLanguage
     @Default(.isAutoDetectEnabled) private var isAutoDetectEnabled
     @Default(.textDetectionMode) private var textDetectionMode
@@ -44,7 +44,7 @@ struct GeneralSettingsView: View {
                 KeyboardShortcuts.Recorder("Screenshot OCR:", name: .ocrScreenshot)
                 KeyboardShortcuts.Recorder("Manual Translation:", name: .inputTranslation)
                 KeyboardShortcuts.Recorder("Text Parsing:", name: .inputParsing)
-                KeyboardShortcuts.Recorder("Word Translation:", name: .inputWordLookup)
+                KeyboardShortcuts.Recorder("Smart Translation:", name: .inputSmartTranslation)
                 KeyboardShortcuts.Recorder("Clipboard Translation:", name: .clipboardTranslation)
             }
 
@@ -147,18 +147,18 @@ struct GeneralSettingsView: View {
                     .foregroundStyle(.secondary)
             }
 
-            Section("Word Translation") {
-                Picker("Word Translation Provider", selection: $wordLookupCoordinator.selectedProviderID) {
+            Section("Smart Translation") {
+                Picker("Smart Translation Provider", selection: $smartTranslationCoordinator.selectedProviderID) {
                     Text("Enabled LLMs (Default)").tag("")
-                    ForEach(wordLookupCoordinator.availableProviders, id: \.id) { provider in
+                    ForEach(smartTranslationCoordinator.availableProviders, id: \.id) { provider in
                         Text(provider.displayName).tag(provider.id)
                     }
-                    if !wordLookupCoordinator.selectedProviderID.isEmpty,
-                       !wordLookupCoordinator.availableProviders.contains(where: { $0.id == wordLookupCoordinator.selectedProviderID }) {
-                        Text("Unavailable Provider").tag(wordLookupCoordinator.selectedProviderID)
+                    if !smartTranslationCoordinator.selectedProviderID.isEmpty,
+                       !smartTranslationCoordinator.availableProviders.contains(where: { $0.id == smartTranslationCoordinator.selectedProviderID }) {
+                        Text("Unavailable Provider").tag(smartTranslationCoordinator.selectedProviderID)
                     }
                 }
-                Text("Uses a separate dictionary prompt for pronunciation, Chinese meanings, and three bilingual examples. Translation and Parsing settings are unchanged.")
+                Text("Automatically handles English and Chinese words and sentences. Sentence analysis uses the Parsing explanation language, paste-back behavior, and local history.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }

@@ -122,7 +122,7 @@ struct ParsingPanelView: View {
 }
 
 /// 与参考图一致的分组与语义配色，不把模型返回的 JSON 直接显示给用户。
-private struct StyledParsingResultView: View {
+struct StyledParsingResultView: View {
     let result: ParsingResult
     @Environment(\.colorScheme) private var colorScheme
 
@@ -194,7 +194,7 @@ private struct StyledParsingResultView: View {
     }
 }
 
-private struct ParsingResultsHeightKey: PreferenceKey {
+struct ParsingResultsHeightKey: PreferenceKey {
     static let defaultValue: CGFloat = 0
 
     static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
@@ -203,11 +203,13 @@ private struct ParsingResultsHeightKey: PreferenceKey {
     }
 }
 
-/// 保留原输入区的原生 NSTextView 交互，但不修改旧 SourceInputView。
-private struct ParsingTextEditor: NSViewRepresentable {
+/// 解析与智能翻译共用原生输入交互，默认提示保留解析行为。
+struct ParsingTextEditor: NSViewRepresentable {
     @Binding var text: String
     let font: NSFont
     let onSubmit: () -> Void
+    var placeholder = String(localized: "Type or paste text, then press Return to parse.")
+    var accessibilityLabel = String(localized: "Text to parse")
     @Default(.defaultInputSource) private var defaultInputSource
 
     func makeCoordinator() -> Coordinator { Coordinator(text: $text) }
@@ -243,7 +245,8 @@ private struct ParsingTextEditor: NSViewRepresentable {
         editor.initialInputSource = defaultInputSource
         editor.typingAttributes = [.font: font, .foregroundColor: NSColor.labelColor]
         editor.onSubmit = onSubmit
-        editor.setAccessibilityLabel(String(localized: "Text to parse"))
+        editor.placeholder = placeholder
+        editor.setAccessibilityLabel(accessibilityLabel)
         scrollView.documentView = editor
         return scrollView
     }
@@ -257,6 +260,8 @@ private struct ParsingTextEditor: NSViewRepresentable {
             editor.typingAttributes = [.font: font, .foregroundColor: NSColor.labelColor]
         }
         editor.onSubmit = onSubmit
+        editor.placeholder = placeholder
+        editor.setAccessibilityLabel(accessibilityLabel)
         editor.initialInputSource = defaultInputSource
         editor.updateLayout(for: scrollView.contentSize)
         editor.needsDisplay = true
@@ -278,6 +283,7 @@ private struct ParsingTextEditor: NSViewRepresentable {
 private final class ParsingTextView: NSTextView {
     var onSubmit: (() -> Void)?
     var initialInputSource = ""
+    var placeholder = ""
     private var didFocusInitially = false
     private var submitsOnReturnUp = false
 
@@ -289,8 +295,7 @@ private final class ParsingTextView: NSTextView {
             origin: textContainerOrigin,
             size: NSSize(width: max(0, bounds.width - textContainerOrigin.x), height: ceil(font.ascender - font.descender + font.leading))
         )
-        let placeholder = String(localized: "Type or paste text, then press Return to parse.") as NSString
-        placeholder.draw(
+        (placeholder as NSString).draw(
             with: rect,
             options: [.usesLineFragmentOrigin, .truncatesLastVisibleLine],
             attributes: [.font: font, .foregroundColor: NSColor.tertiaryLabelColor]

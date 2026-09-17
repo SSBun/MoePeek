@@ -218,7 +218,8 @@ final class ParsingPanelController: NSObject, NSWindowDelegate {
     }
 }
 
-private final class ParsingPanel: NSPanel {
+/// 解析与智能翻译共用的非激活紧凑窗口，保留外缘拖动与关闭键。
+final class ParsingPanel: NSPanel {
     var onCancel: (() -> Void)?
 
     override var canBecomeKey: Bool { true }

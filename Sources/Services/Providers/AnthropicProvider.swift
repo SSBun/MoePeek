@@ -18,7 +18,7 @@ struct AnthropicProvider: ParallelModelProvider {
     var category: ProviderCategory { .llm }
     let supportsStreaming = true
     let supportsParsing = true
-    let supportsWordLookup = true
+    let supportsSmartTranslation = true
     let isAvailable = true
 
     // Namespaced Defaults keys

@@ -9,12 +9,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     // SwiftUI evaluates MoePeekApp.body (which reads registry) during app init.
     lazy var registry = TranslationProviderRegistry.builtIn()
     lazy var parsingCoordinator = ParsingCoordinator(registry: registry)
-    lazy var wordLookupCoordinator = WordLookupCoordinator(registry: registry)
+    lazy var smartTranslationCoordinator = SmartTranslationCoordinator(registry: registry, historyStore: parsingCoordinator.historyStore)
     var coordinator: TranslationCoordinator!
     var historyManager: TranslationHistoryManager!
     var panelController: PopupPanelController!
     var parsingPanelController: ParsingPanelController?
-    var wordLookupPanelController: WordLookupPanelController?
+    var smartTranslationPanelController: SmartTranslationPanelController?
     var permissionManager: PermissionManager!
     var onboardingController: OnboardingWindowController!
     var selectionMonitor: SelectionMonitor!
@@ -34,7 +34,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         coordinator.historyManager = historyManager
         panelController = PopupPanelController(coordinator: coordinator, historyManager: historyManager)
         parsingPanelController = ParsingPanelController(coordinator: parsingCoordinator)
-        wordLookupPanelController = WordLookupPanelController(coordinator: wordLookupCoordinator)
+        smartTranslationPanelController = SmartTranslationPanelController(coordinator: smartTranslationCoordinator)
         onboardingController = OnboardingWindowController(permissionManager: permissionManager, registry: registry)
         selectionMonitor = SelectionMonitor()
         triggerIconController = TriggerIconController()
@@ -67,7 +67,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationWillTerminate(_: Notification) {
         parsingCoordinator.historyServer.stop()
         parsingPanelController?.dismiss(restoringFocus: false)
-        wordLookupPanelController?.dismiss(restoringFocus: false)
+        smartTranslationPanelController?.dismiss(restoringFocus: false)
     }
 
     // MARK: - URL Scheme Handler
@@ -247,10 +247,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             }
         }
 
-        KeyboardShortcuts.onKeyUp(for: .inputWordLookup) { [weak self] in
+        KeyboardShortcuts.onKeyUp(for: .inputSmartTranslation) { [weak self] in
             guard let self else { return }
             Task { @MainActor in
-                self.wordLookupPanelController?.show()
+                self.smartTranslationPanelController?.show()
             }
         }
 

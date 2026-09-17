@@ -36,11 +36,11 @@ struct MenuItemView: View {
         .globalKeyboardShortcut(.inputParsing)
 
         Button {
-            appDelegate.wordLookupPanelController?.show()
+            appDelegate.smartTranslationPanelController?.show()
         } label: {
-            Label("Word Translation", systemImage: "character.book.closed")
+            Label("Smart Translation", systemImage: "character.book.closed")
         }
-        .globalKeyboardShortcut(.inputWordLookup)
+        .globalKeyboardShortcut(.inputSmartTranslation)
 
         Button {
             appDelegate.parsingCoordinator.openHistory()

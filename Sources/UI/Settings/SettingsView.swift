@@ -4,7 +4,7 @@ import SwiftUI
 struct SettingsView: View {
     let registry: TranslationProviderRegistry
     let parsingCoordinator: ParsingCoordinator
-    let wordLookupCoordinator: WordLookupCoordinator
+    let smartTranslationCoordinator: SmartTranslationCoordinator
     let updaterController: UpdaterController?
 
     @Default(.selectedSettingsTab) private var selectedTab
@@ -21,7 +21,7 @@ struct SettingsView: View {
 
     var body: some View {
         TabView(selection: $selectedTab) {
-            GeneralSettingsView(parsingCoordinator: parsingCoordinator, wordLookupCoordinator: wordLookupCoordinator)
+            GeneralSettingsView(parsingCoordinator: parsingCoordinator, smartTranslationCoordinator: smartTranslationCoordinator)
                 .tabItem {
                     Label("General", systemImage: "gear")
                 }
