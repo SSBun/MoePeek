@@ -1,0 +1,7 @@
+本地预览端口 59432
+{"stage": "smart", "fixture": "resilient", "model": "fixture-fail"}
+{"stage": "smart", "fixture": "resilient", "model": "fixture"}
+{"stage": "smart", "fixture": "resilient", "model": "fixture"}
+{"stage": "smart", "fixture": "resilient", "model": "fixture-fail"}
+{"stage": "smart", "fixture": "slow", "model": "fixture"}
+{"stage": "smart", "fixture": "slow", "model": "fixture-fail"}

@@ -1,0 +1,33 @@
+{
+  "验证类型": "实际构建应用的原生界面人工核验，使用本地固定 SSE 响应；不是测试套件，也不是模型质量验证",
+  "产品快照": "snapshot.json，26项逐项重算一致，SHA256 114ee581130c3493a37d8d1f01e97e68ea81f89075585c6f1ce56cbb3fa226af",
+  "构建产物": "MoePeek-dslezeiaypuqlfbqxltcgzuetmeq/Build/Products/Debug/MoePeek.app",
+  "隔离": {
+    "响应服务": "127.0.0.1 回环服务 native-preview-server.py，启动参数提供仅用于预览的凭据和模型 fixture",
+    "历史目录": "/tmp/moepeek-smart-native-preview/home/Library/Application Support/MoePeek/ParsingHistory",
+    "环境": "CFFIXED_USER_HOME 隔离 Application Support；不假定该变量隔离 UserDefaults，另外对持久偏好逐键哈希比较",
+    "持久偏好变化键": [],
+    "真实模型请求": false,
+    "测试套件": "未运行"
+  },
+  "原生观察": [
+    {"操作": "从菜单打开空面板", "尺寸": [560, 78], "结果": "输入为空，显示智能输入占位文案", "截图": "native-empty.png"},
+    {"操作": "输入 resilient 并回车", "尺寸": [560, 245], "结果": "完整词条、同行音标、词性释义、三组双语例句", "截图": "native-english-word.png"},
+    {"操作": "输入 坚韧 并回车", "尺寸": [560, 446], "结果": "persistence 和 tenacity 全部展开，六组例句可读，无候选编号或例句标题", "截图": "native-chinese-word.png"},
+    {"操作": "输入英文错误句并回车", "尺寸": [560, 165], "结果": "淡色中文译文，无中文翻译标题或上下分隔线；紧接 Writing check 纠错和原因", "截图": "native-english-sentence.png"},
+    {"操作": "输入中文句子并回车", "尺寸": [560, 281], "结果": "Writing tutor、单一英文表达、Words、Grammar，与原解析视图一致", "截图": "native-chinese-sentence.png"},
+    {"操作": "输入 longword 加载24条说明，再在结果区滚动", "尺寸": [560, 640], "结果": "窗口限制为640px高；原生滚轮后滚动条值由0.0变为1.0，可见最后一组例句", "截图": "native-long-scroll.png"},
+    {"操作": "输入 retry，服务首次返回503，原输入不变再次回车", "结果": "先显示 API error (503)，第二次成功显示 resilient 词条，不需要改动输入"},
+    {"操作": "输入 slow，服务延迟5秒；完成前改成 坚韧 并回车", "结果": "超过旧请求的5秒延迟后仍是两个中文词语候选，迟到词条未覆盖新结果"},
+    {"操作": "Cmd+Return 复制长词条", "结果": "剪贴板包含 resilient 和最后一条例句，窗口关闭；本次复制检查在内存中保存并恢复原剪贴板，不记录其内容"},
+    {"操作": "聚焦临时 TextEdit 文档，使用已有 Ctrl+H 快捷键打开，提交中文句子，再次回车", "结果": "临时文档的选中内容变为 Could you explain why this approach is more reliable?；智能窗口关闭"},
+    {"操作": "同样从快捷键提交英文错误句，再次回车", "结果": "临时文档变为 She didn't understand the issue very well yesterday.；智能窗口关闭", "截图": "native-pasteback.png"},
+    {"操作": "聚焦临时 TextEdit 文档，从菜单打开智能面板，提交中文句子并再次回车", "结果": "同样成功回填英文正文，窗口关闭"},
+    {"操作": "输入 resilient 后 Shift+Return", "结果": "输入区内容增加换行，没有发起解析请求"},
+    {"操作": "Esc 关闭后重新打开", "结果": "新窗口为空且恢复560×78，未保留旧草稿"},
+    {"操作": "检查隔离解析历史", "结果": "8条人工预览句子记录，包含 check 和 tutor，model=fixture；词条没有记录", "证据": "native-history.jsonl"}
+  ],
+  "验证过程中排除的环境因素": "最初保留两个同名应用实例，部分 AX 自动化激活与回填未成功；正常退出旧实例（当时仅有 General 设置窗口）并单实例重做后，快捷键和菜单回填均成功。第一次通过辅助功能滚动动作未滚动，真实滚轮事件成功。期间一次嵌套 AppleScript 读取 TextEdit 文本超时，终止该读取进程并改用目标文档 AX 值观察；未将失败尝试计作通过。",
+  "清理": "本地响应服务和预览进程已结束；临时 TextEdit 文档已关闭。正常启动不含覆盖参数的新版 MoePeek。历史证据来自隔离目录。回填按原行为将示例英文留在剪贴板。",
+  "限制": "未核验真实模型的语义分类和翻译质量；原生截图为当前深色外观；没有人工输入法组字验证，保留共用输入组件原有组字逻辑。"
+}

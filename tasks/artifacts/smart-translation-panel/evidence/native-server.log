@@ -1,0 +1,25 @@
+本地预览端口 57679
+{"stage": "smart", "fixture": "resilient"}
+{"stage": "smart", "fixture": "坚韧"}
+{"stage": "smart", "fixture": "She don't understood the issue very well yesterday."}
+{"stage": "parsing", "fixture": "She don't understood the issue very well yesterday."}
+{"stage": "smart", "fixture": "你能解释一下为什么这个方案更可靠吗？"}
+{"stage": "parsing", "fixture": "你能解释一下为什么这个方案更可靠吗？"}
+{"stage": "smart", "fixture": "longword"}
+{"stage": "smart", "fixture": "retry"}
+{"stage": "smart", "fixture": "retry"}
+{"stage": "smart", "fixture": "slow"}
+{"stage": "smart", "fixture": "坚韧"}
+{"stage": "smart", "fixture": "longword"}
+{"stage": "smart", "fixture": "你能解释一下为什么这个方案更可靠吗？"}
+{"stage": "parsing", "fixture": "你能解释一下为什么这个方案更可靠吗？"}
+{"stage": "smart", "fixture": "你能解释一下为什么这个方案更可靠吗？"}
+{"stage": "parsing", "fixture": "你能解释一下为什么这个方案更可靠吗？"}
+{"stage": "smart", "fixture": "你能解释一下为什么这个方案更可靠吗？"}
+{"stage": "parsing", "fixture": "你能解释一下为什么这个方案更可靠吗？"}
+{"stage": "smart", "fixture": "你能解释一下为什么这个方案更可靠吗？"}
+{"stage": "parsing", "fixture": "你能解释一下为什么这个方案更可靠吗？"}
+{"stage": "smart", "fixture": "She don't understood the issue very well yesterday."}
+{"stage": "parsing", "fixture": "She don't understood the issue very well yesterday."}
+{"stage": "smart", "fixture": "你能解释一下为什么这个方案更可靠吗？"}
+{"stage": "parsing", "fixture": "你能解释一下为什么这个方案更可靠吗？"}

@@ -1,0 +1,26 @@
+{
+  "关联发现": "TR-3",
+  "方法": "实际原生 Debug 应用、同一 OpenAI-compatible 服务的 fixture 和 fixture-fail 两个模型，本地固定 SSE 响应。未运行测试套件或真实模型请求。",
+  "启动覆盖": {"provider_openai_model": "fixture", "provider_openai_enabledModels": ["fixture-fail"], "wordLookupProviderID": "openai"},
+  "复现": {
+    "产物": "修复前，产品身份与 snapshot-2.json 一致",
+    "操作": "输入 resilient 并Return，待一个模型词条成功、另一个503失败；不改输入再次Return。",
+    "观察": "界面仍一成功一失败；服务日志始终只有2次请求，没有重试。",
+    "截图": "native-partial-failure-before.png",
+    "日志": "native-partial-before.log"
+  },
+  "修复": {
+    "文件": "Sources/Core/SmartTranslationCoordinator.swift",
+    "变化": "enterAction 的句子回填仍优先；进行中先wait；全部结束且存在error时process；没有error的成功词条才wait。"
+  },
+  "修复后": {
+    "构建": "xcodebuild -workspace MoePeek.xcworkspace -scheme MoePeek -configuration Debug -destination platform=macOS build；BUILD SUCCEEDED，3.231秒",
+    "操作": "重启本地服务以重置首次失败，再运行修复后产物，用相同 resilient 输入及相同两个模型提交。首次仍一成功一失败；不改输入再次Return。",
+    "观察": "日志从2次请求增加到4次，两个模型均显示完整词条，原错误消失；窗口560×437。两个模型均成功后再次Return，请求数保持4。",
+    "进行中保护": "改成 slow 后连续Return，两个模型各发出一次请求，没有重复；5秒后完成。最终日志6次请求：resilient共4次，slow共2次。",
+    "截图": "native-partial-retry-after.png",
+    "日志": "native-partial-after.log"
+  },
+  "清理": "本地服务和预览进程均已结束，正常配置新版已启动。正常退出后立即open首次因进程尚未完全退出返回-600，确认退出后单独open成功。持久偏好逐键哈希与首次验证前一致，变化键为空。",
+  "限制": "仅验证词条部分失败的恢复和完成/进行中防重复；句子回填分支未改变，沿用首轮原生回填证据。模型分类质量仍未验证。"
+}

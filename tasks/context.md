@@ -40,3 +40,18 @@
 ### Decision and Verification Boundaries
 - HTTP 服务验证与原生菜单/浏览器交接验证不同；隔离服务运行不能证明原生窗口交互。
 - 每日读取存在明确大小限制，损坏行由页面报告跳过；数据保存不因页面显示失败而被删除或截断。
+
+## CTX-smart-translation — 智能翻译与解析复用
+- Scope: 智能模式的语义路由、解析复用、历史及旧单词模式设置兼容。
+- Paths: `Sources/Core/SmartTranslationCoordinator.swift`, `Sources/Core/SmartTranslationResult.swift`, `Sources/UI/SmartTranslationPanel`, `Sources/UI/ParsingPanel`, `Sources/Services/TranslationProvider.swift`, `Sources/Utilities/Constants.swift`
+- Keywords: 智能翻译, smartTranslation, 单词, 词语, 句子, parsing, 回填
+- Authority: `Sources/Core/SmartTranslationCoordinator.swift`, `Sources/Core/SmartTranslationResult.swift`, `Sources/UI/SmartTranslationPanel/SmartTranslationPanelView.swift`, `Sources/UI/ParsingPanel/ParsingPanelView.swift`, `Sources/Utilities/Constants.swift`, `Sources/App/AppDelegate.swift`
+- Recheck: 修改智能路由协议、解析共享组件、历史保存或偏好键时重新核对。
+
+### Structure
+- 智能模式替代旧单词入口；首个 LLM 请求按语义区分中英文词语与句子，词语直接得到完整词条，句子随后将原输入发送到未改写的 parsing 协议。
+- ParsingTextEditor、StyledParsingResultView 与 ParsingPanel 同时供解析和智能模式使用；改动共享输入、结果或窗口时需检查两个入口的行为。
+
+### Relationships
+- 智能句子的解析结果保存到与 ParsingCoordinator 共享的 ParsingHistoryStore；词条不保存，中文译文不扩展现有历史格式。说明语言沿用 parsingExplanationLanguage。
+- 智能模式服务与快捷键的 Swift 名称已改变，但底层仍使用 wordLookupProviderID 和 inputWordLookup 存储名称，以继承旧用户设置。
