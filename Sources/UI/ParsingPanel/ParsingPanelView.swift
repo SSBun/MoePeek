@@ -298,7 +298,7 @@ private final class ParsingTextView: NSTextView {
         (placeholder as NSString).draw(
             with: rect,
             options: [.usesLineFragmentOrigin, .truncatesLastVisibleLine],
-            attributes: [.font: font, .foregroundColor: NSColor.tertiaryLabelColor]
+            attributes: [.font: font, .foregroundColor: NSColor.secondaryLabelColor]
         )
     }
 
