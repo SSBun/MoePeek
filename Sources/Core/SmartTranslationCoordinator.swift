@@ -108,6 +108,14 @@ final class SmartTranslationCoordinator {
         }
         if providerStates.values.contains(where: {
             if case .loading = $0 { return true }
+            return false
+        }) { return .wait }
+        // 所有请求结束后，成功词条不能阻止失败服务重试。
+        if providerStates.values.contains(where: {
+            if case .error = $0 { return true }
+            return false
+        }) { return .process }
+        if providerStates.values.contains(where: {
             if case .completed(.words) = $0 { return true }
             return false
         }) { return .wait }
