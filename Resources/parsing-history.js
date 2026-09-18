@@ -8,11 +8,6 @@ const entries = document.querySelector("#entries");
 const more = document.querySelector("#more");
 const refresh = document.querySelector("#refresh");
 const theme = document.querySelector("#theme");
-let token = location.hash.slice(1);
-try {
-  if (token) sessionStorage.setItem("moepeek-review-token", token);
-  else token = sessionStorage.getItem("moepeek-review-token") || "";
-} catch { /* 禁用浏览器存储时，本次页面仍使用内存令牌。 */ }
 history.replaceState(null, "", location.pathname);
 let records = [];
 let skipped = 0;
@@ -34,8 +29,8 @@ function element(tag, text, className) {
 }
 
 async function request(path, signal, method = "GET") {
-  const response = await fetch(path, { method, headers: { Authorization: `Bearer ${token}` }, cache: "no-store", signal });
-  if (response.status === 403) throw new Error("访问已过期，请从 MoePeek 的「英语复习」重新打开页面。");
+  const response = await fetch(path, { method, cache: "no-store", signal });
+  if (response.status === 403) throw new Error("请求来源不受信任，请直接打开 MoePeek 的本机复习网址。");
   if (!response.ok) throw new Error("操作未完成，请刷新核对当前记录后重试。");
   return response;
 }
@@ -341,7 +336,6 @@ async function load(reloadDays = false) {
   search.setAttribute("aria-label", searchLabel);
   status.textContent = "正在读取解析记录…";
   try {
-    if (!token) throw new Error("请从 MoePeek 菜单中的「英语复习」打开此页。");
     if (reloadDays) {
       const days = await (await request("/api/days", signal)).json();
       if (current !== generation) return;

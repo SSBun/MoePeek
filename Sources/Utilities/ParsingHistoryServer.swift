@@ -10,7 +10,6 @@ final class ParsingHistoryServer {
     private var pendingStart: CheckedContinuation<URL, Error>?
     private var startupDeadline: Task<Void, Never>?
     private var address: URL?
-    private var token = ""
     private var connections: [UUID: NWConnection] = [:]
     private var deadlines: [UUID: Task<Void, Never>] = [:]
 
@@ -18,7 +17,7 @@ final class ParsingHistoryServer {
         self.store = store
     }
 
-    /// 返回带会话令牌的浏览器地址；并发点击共享同一次启动。
+    /// 返回可收藏的本机浏览器地址；并发点击共享同一次启动。
     func start() async throws -> URL {
         if let address { return address }
         if let startTask { return try await startTask.value }
@@ -31,7 +30,7 @@ final class ParsingHistoryServer {
         return try await task.value
     }
 
-    /// 停止监听并关闭全部请求，令旧页面的访问令牌失效。
+    /// 停止监听并关闭全部请求。
     func stop() {
         startTask?.cancel()
         startupDeadline?.cancel()
@@ -41,7 +40,6 @@ final class ParsingHistoryServer {
         listener?.cancel()
         listener = nil
         address = nil
-        token = ""
         pendingStart?.resume(throwing: CancellationError())
         pendingStart = nil
         for id in Array(connections.keys) { close(id) }
@@ -53,7 +51,6 @@ final class ParsingHistoryServer {
         parameters.requiredLocalEndpoint = .hostPort(host: .ipv4(.loopback), port: 18765)
         let listener = try NWListener(using: parameters)
         self.listener = listener
-        token = UUID().uuidString + UUID().uuidString
         listener.newConnectionHandler = { [weak self] connection in
             Task { @MainActor [weak self] in
                 guard let self, self.listener === listener else { connection.cancel(); return }
@@ -73,7 +70,7 @@ final class ParsingHistoryServer {
                     switch state {
                     case .ready:
                         guard let port = listener.port,
-                              let url = URL(string: "http://127.0.0.1:\(port.rawValue)/index.html#\(self.token)") else {
+                              let url = URL(string: "http://127.0.0.1:\(port.rawValue)/index.html") else {
                             self.stop()
                             return
                         }
@@ -153,9 +150,10 @@ final class ParsingHistoryServer {
             respond(id, status: 400)
             return
         }
+        // 书签导航可不带 Origin；写操作必须明确来自本页，不能仅凭回环地址信任请求。
         guard let port = listener?.port,
               headers["host"] == "127.0.0.1:\(port.rawValue)",
-              headers["origin"] == nil || headers["origin"] == "http://127.0.0.1:\(port.rawValue)",
+              (method == "GET" && headers["origin"] == nil) || headers["origin"] == "http://127.0.0.1:\(port.rawValue)",
               headers["sec-fetch-site"] == nil || ["same-origin", "none"].contains(headers["sec-fetch-site"] ?? "")
         else { respond(id, status: 403); return }
         let path = String(request[1])
@@ -172,7 +170,6 @@ final class ParsingHistoryServer {
             respond(id, status: 200, type: type, body: data)
             return
         }
-        guard !token.isEmpty, headers["authorization"] == "Bearer " + token else { respond(id, status: 403); return }
         do {
             let components = path.split(separator: "/", omittingEmptySubsequences: false)
             if method == "POST", components.count == 6,

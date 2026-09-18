@@ -32,7 +32,7 @@
 
 ### Relationships
 - ParsingCoordinator 持有同一历史 store 和 server；AppDelegate 启动时调用 startHistoryService 在后台启动服务但不打开浏览器，退出时停止。菜单及设置共享 openHistory 入口，仍调用幂等的 start 以复用服务或重试失败启动。
-- HTTP 仅绑定回环地址；端口在 ParsingHistoryServer.startListener 中固定指定，不回退到动态端口。历史及复习状态 API 使用会话令牌并检查来源；固定资源路由不允许读取任意本地文件。
+- HTTP 仅绑定回环地址；端口在 ParsingHistoryServer.startListener 中固定指定，不回退到动态端口。网页使用固定无令牌地址，支持书签及新标签页直接访问；请求仍精确检查 Host、Origin 和 Sec-Fetch-Site，POST 必须提供同源 Origin，GET 允许书签导航缺省 Origin。固定资源路由不允许读取任意本地文件。
 - 收藏与学习事件独立保存在日期对应的 `.review.json`；Study 在 store actor 内按服务端本地日期限次，每次事件保留本地日期和 ISO 8601 时间，次数由事件数组派生。
 - 用户可通过卡片删除图标确认永久删除指定日期、UUID 的 JSONL 行及关联复习状态；其他行保留原始字节。追加、删除和复习状态修改共享稳定的日期锁文件，避免原子替换 JSONL 后并发追加丢失；旧进程不识别该锁，更新后应退出旧版再使用删除入口。删除先清理关联状态，再原子提交 JSONL；后者失败时卡片仍保留，可点击重试。
 - 页面资源来自应用 Bundle，由 Project.swift 的 Resources/** 打包；浏览器以 JSONL 读取，DOM textContent 渲染，不执行记录中的 HTML。

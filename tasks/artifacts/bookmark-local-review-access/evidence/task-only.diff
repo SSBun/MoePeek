@@ -1,0 +1,117 @@
+--- before/Sources/Utilities/ParsingHistoryServer.swift
++++ after/Sources/Utilities/ParsingHistoryServer.swift
+@@ -10,7 +10,6 @@
+     private var pendingStart: CheckedContinuation<URL, Error>?
+     private var startupDeadline: Task<Void, Never>?
+     private var address: URL?
+-    private var token = ""
+     private var connections: [UUID: NWConnection] = [:]
+     private var deadlines: [UUID: Task<Void, Never>] = [:]
+ 
+@@ -18,7 +17,7 @@
+         self.store = store
+     }
+ 
+-    /// 返回带会话令牌的浏览器地址；并发点击共享同一次启动。
++    /// 返回可收藏的本机浏览器地址；并发点击共享同一次启动。
+     func start() async throws -> URL {
+         if let address { return address }
+         if let startTask { return try await startTask.value }
+@@ -31,7 +30,7 @@
+         return try await task.value
+     }
+ 
+-    /// 停止监听并关闭全部请求，令旧页面的访问令牌失效。
++    /// 停止监听并关闭全部请求。
+     func stop() {
+         startTask?.cancel()
+         startupDeadline?.cancel()
+@@ -41,7 +40,6 @@
+         listener?.cancel()
+         listener = nil
+         address = nil
+-        token = ""
+         pendingStart?.resume(throwing: CancellationError())
+         pendingStart = nil
+         for id in Array(connections.keys) { close(id) }
+@@ -53,7 +51,6 @@
+         parameters.requiredLocalEndpoint = .hostPort(host: .ipv4(.loopback), port: 18765)
+         let listener = try NWListener(using: parameters)
+         self.listener = listener
+-        token = UUID().uuidString + UUID().uuidString
+         listener.newConnectionHandler = { [weak self] connection in
+             Task { @MainActor [weak self] in
+                 guard let self, self.listener === listener else { connection.cancel(); return }
+@@ -73,7 +70,7 @@
+                     switch state {
+                     case .ready:
+                         guard let port = listener.port,
+-                              let url = URL(string: "http://127.0.0.1:\(port.rawValue)/index.html#\(self.token)") else {
++                              let url = URL(string: "http://127.0.0.1:\(port.rawValue)/index.html") else {
+                             self.stop()
+                             return
+                         }
+@@ -153,9 +150,10 @@
+             respond(id, status: 400)
+             return
+         }
++        // 书签导航可不带 Origin；写操作必须明确来自本页，不能仅凭回环地址信任请求。
+         guard let port = listener?.port,
+               headers["host"] == "127.0.0.1:\(port.rawValue)",
+-              headers["origin"] == nil || headers["origin"] == "http://127.0.0.1:\(port.rawValue)",
++              (method == "GET" && headers["origin"] == nil) || headers["origin"] == "http://127.0.0.1:\(port.rawValue)",
+               headers["sec-fetch-site"] == nil || ["same-origin", "none"].contains(headers["sec-fetch-site"] ?? "")
+         else { respond(id, status: 403); return }
+         let path = String(request[1])
+@@ -172,7 +170,6 @@
+             respond(id, status: 200, type: type, body: data)
+             return
+         }
+-        guard !token.isEmpty, headers["authorization"] == "Bearer " + token else { respond(id, status: 403); return }
+         do {
+             let components = path.split(separator: "/", omittingEmptySubsequences: false)
+             if method == "POST", components.count == 6,
+--- before/Resources/parsing-history.js
++++ after/Resources/parsing-history.js
+@@ -8,11 +8,6 @@
+ const more = document.querySelector("#more");
+ const refresh = document.querySelector("#refresh");
+ const theme = document.querySelector("#theme");
+-let token = location.hash.slice(1);
+-try {
+-  if (token) sessionStorage.setItem("moepeek-review-token", token);
+-  else token = sessionStorage.getItem("moepeek-review-token") || "";
+-} catch { /* 禁用浏览器存储时，本次页面仍使用内存令牌。 */ }
+ history.replaceState(null, "", location.pathname);
+ let records = [];
+ let skipped = 0;
+@@ -34,8 +29,8 @@
+ }
+ 
+ async function request(path, signal, method = "GET") {
+-  const response = await fetch(path, { method, headers: { Authorization: `Bearer ${token}` }, cache: "no-store", signal });
+-  if (response.status === 403) throw new Error("访问已过期，请从 MoePeek 的「英语复习」重新打开页面。");
++  const response = await fetch(path, { method, cache: "no-store", signal });
++  if (response.status === 403) throw new Error("请求来源不受信任，请直接打开 MoePeek 的本机复习网址。");
+   if (!response.ok) throw new Error("操作未完成，请刷新核对当前记录后重试。");
+   return response;
+ }
+@@ -341,7 +336,6 @@
+   search.setAttribute("aria-label", searchLabel);
+   status.textContent = "正在读取解析记录…";
+   try {
+-    if (!token) throw new Error("请从 MoePeek 菜单中的「英语复习」打开此页。");
+     if (reloadDays) {
+       const days = await (await request("/api/days", signal)).json();
+       if (current !== generation) return;
+--- before/README_zh.md
++++ after/README_zh.md
+@@ -117,7 +117,7 @@
+ - 回填把正文写入系统剪贴板，再执行原应用的正常 Paste 菜单动作，遵循原光标/选区；不会设置整框文本、发送全局按键或额外 Return。英文正文留在剪贴板中；若检测到外部剪贴板变化则停止，不覆盖用户的新复制内容。无法通过 AX 确认可编辑的终端/自定义控件可能需要手动粘贴。
+ - 结果仍可选择文字复制或右键 **复制**；右键复制保留全部解析信息，而非 JSON。两种复制都不应用译文首字母格式化，也不写入翻译历史。
+ - **本地学习笔记**：完整且格式有效的解析结果按完成时的本地日期追加到 `~/Library/Application Support/MoePeek/ParsingHistory/YYYY-MM-DD.jsonl`。每行包含格式版本、唯一 ID、完成时间、原文、服务／模型信息，以及对应的完整 `check` / `tutor` / `skip` 结果；**没有纠错项且没有有效改写建议的 Writing check 不保存**（空白改写也视为没有建议）。旧文件中的此类记录仅在网页中过滤，不删除或改写历史；tutor 和 skip 沿用原有保存规则，多模型结果分别记录。新记录采用 `schemaVersion: 2`，复习页继续兼容旧 `schemaVersion: 1` 的正文／自然表达格式，旧 JSONL 不迁移或改写。失败或取消且未产生完整结果的请求不记录。模型名取自提交时的快照，未指定时存为 `null`。已有 Markdown 文件保持原样，不自动迁移或在复习页展示。
+-- 点击菜单栏的 **英语复习**，或 **设置 → 通用 → 解析 → 英语复习**，在浏览器中通过左侧日期栏阅读笔记、搜索当天内容。原文与解析在同一张圆角卡片中直接展示，内容采用 14px 字号；解析保留原生面板的等宽字体及青色、黄色、红绿纠错配色，支持深浅色切换。窄屏时日期改为顶部选择器。页面不使用 CDN 或外部服务，历史不上传。本机 HTTP 服务使用固定端口 `18765`，仅监听 `127.0.0.1`；端口被占用时启动失败，不自动切换端口；历史接口要求会话令牌，并检查 Host、Origin 和浏览器来源信息。退出 MoePeek 后服务关闭，重启后从应用重新打开页面即可读取之前保存的 JSONL。
++- 点击菜单栏的 **英语复习**，或 **设置 → 通用 → 解析 → 英语复习**，在浏览器中通过左侧日期栏阅读笔记、搜索当天内容。原文与解析在同一张圆角卡片中直接展示，内容采用 14px 字号；解析保留原生面板的等宽字体及青色、黄色、红绿纠错配色，支持深浅色切换。窄屏时日期改为顶部选择器。页面不使用 CDN 或外部服务，历史不上传。本机 HTTP 服务使用固定端口 `18765`，仅监听 `127.0.0.1`；端口被占用时启动失败，不自动切换端口；可将 `http://127.0.0.1:18765/index.html` 保存为书签，在应用运行时直接打开，无需会话令牌；仍检查 Host、Origin 和浏览器来源信息，所有写操作必须携带同源 Origin。退出 MoePeek 后服务关闭，重启应用后可继续通过原书签读取之前保存的 JSONL。
+ - 每张复习卡片右侧提供垃圾桶图标；确认后按日期和记录 ID 从本地 JSONL 删除该条，并清理其收藏、学习状态，刷新或重启后不再出现。其他行（包括损坏行）保留原始字节；缺少有效 ID 或 ID 重复时不执行不安全删除。删除无法撤销；先清理关联状态，再原子提交历史删除。失败时历史卡片仍可能保留，请刷新核对并重试。`skip` 是模型返回的“跳过解析”结果，目前仍会保存，可按需手动删除。
+ - **打开解析记录文件夹** 仍可打开实际存储目录。这些文件是本地明文，请留意备份和共享范围。写入失败（包括取锁超过一秒）会在解析面板提示，结果仍可复制使用。损坏或版本不支持的 JSONL 行会在页面显示跳过数量，不修改源文件；单日文件超过 64 MiB 时页面会明确提示读取失败，原始记录不会截断。
+ - 若提示没有可用 LLM，从菜单栏打开设置，在通用页选择解析服务，或到服务页配置对应账户/模型。
