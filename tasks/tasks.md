@@ -1,5 +1,23 @@
 # 任务索引
 
+- [支持书签直接访问本机复习页](tasks/bookmark-local-review-access.md) — Completed (2026-09-17 17:34)
+
+- [在时间侧栏增加星标收藏入口](tasks/starred-sidebar-filter.md) — Completed (2026-09-17 16:20)
+
+- [为复习记录添加本地删除入口并解释跳过记录来源](tasks/delete-parsing-history-entry.md) — In Progress (2026-09-17 14:27)
+
+- [提高复习页已读按钮状态对比度](tasks/improve-read-button-contrast.md) — Completed (2026-09-17 13:34)
+
+- [固定内置解析历史复习网站端口](tasks/fixed-review-website-port.md) — Completed (2026-09-17 11:18)
+
+- [复习卡片操作按钮直接平铺显示](tasks/flatten-review-card-actions.md) — Completed (2026-09-17 11:09)
+
+- [按独立功能拆分提交当前本地改动](tasks/commit-current-changes-by-concern.md) — Completed (2026-09-18 11:49)
+
+- [提高输入框占位提示的可读性](tasks/improve-input-placeholder-contrast.md) — Completed (2026-09-17 10:19)
+
+- [将单词翻译升级为智能翻译面板](tasks/smart-translation-panel.md) — Completed (2026-09-16 18:52)
+
 - [为单词翻译输入框添加占位提示](tasks/word-translation-input-placeholder.md) — Completed (2026-09-16 15:08)
 
 - [按独立功能整理并提交本地改动](tasks/commit-local-changes-by-concern.md) — Completed (2026-09-16 15:19)
