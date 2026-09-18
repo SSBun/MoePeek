@@ -143,14 +143,12 @@ async function refreshReview() {
 }
 
 function cardActions(entry) {
-  const actions = element("details", undefined, "card-actions");
-  const summary = element("summary", "⋯");
-  summary.setAttribute("aria-label", "收藏与学习菜单");
-  const menu = element("div", undefined, "card-menu");
+  const actions = element("div", undefined, "card-actions");
+  actions.setAttribute("role", "group");
+  actions.setAttribute("aria-label", "收藏与学习");
   const favorite = element("button");
   const study = element("button");
   favorite.type = study.type = "button";
-  const progress = element("p", undefined, "study-progress");
   const feedback = element("p", undefined, "action-feedback");
   feedback.setAttribute("role", "status");
   const key = typeof entry.id === "string" ? entry.id.toLowerCase() : "";
@@ -160,16 +158,21 @@ function cardActions(entry) {
     const state = reviewSnapshot?.states[key];
     const events = state?.studyEvents || [];
     const studied = events.some(event => event.day === reviewSnapshot?.today);
-    favorite.textContent = state?.isFavorite ? "★ Unfavorite · 取消收藏" : "☆ Favorite · 收藏";
+    const favoriteLabel = state?.isFavorite ? "取消收藏" : "收藏";
+    favorite.textContent = state?.isFavorite ? "★" : "☆";
+    favorite.title = favoriteLabel;
+    favorite.setAttribute("aria-label", favoriteLabel);
     favorite.setAttribute("aria-pressed", String(Boolean(state?.isFavorite)));
-    study.textContent = studied ? "✓ Study · 今天已学习" : "Study · 今天学过了";
+    const studyLabel = studied ? "今天已学习" : "今天学过了";
+    study.textContent = "✓";
+    study.setAttribute("aria-label", studyLabel);
     favorite.disabled = reviewBusy || !reviewSnapshot || !hasID;
     study.disabled = favorite.disabled || studied;
     const last = events.at(-1);
-    progress.textContent = !hasID ? "此旧记录缺少有效标识，无法保存状态。"
+    const progress = !hasID ? "此旧记录缺少有效标识，无法保存状态。"
       : !reviewSnapshot ? "收藏与学习状态暂不可用"
       : `已学习 ${events.length} 次${last ? ` · 最近：${new Date(last.studiedAt).toLocaleString()}` : ""}`;
-    progress.title = events.map(event => new Date(event.studiedAt).toLocaleString()).join("\n");
+    study.title = [studyLabel, progress, ...events.map(event => new Date(event.studiedAt).toLocaleString())].join("\n");
   }
   async function save(action) {
     if (reviewBusy || day !== daySelect.value) return;
@@ -181,7 +184,7 @@ function cardActions(entry) {
       const snapshot = await (await request(`/api/review/${day}/${key}/${action}`, undefined, "POST")).json();
       if (version !== reviewVersion) return;
       reviewSnapshot = snapshot;
-      feedback.textContent = "已保存";
+      feedback.textContent = "";
     } catch (error) {
       if (version !== reviewVersion) return;
       feedback.textContent = `保存未确认，请刷新后重试：${error.message}`;
@@ -193,18 +196,9 @@ function cardActions(entry) {
   }
   favorite.addEventListener("click", () => save(reviewSnapshot?.states[key]?.isFavorite ? "unfavorite" : "favorite"));
   study.addEventListener("click", () => save("study"));
-  actions.addEventListener("toggle", () => {
-    if (!actions.open) return;
-    for (const other of entries.querySelectorAll("details[open]")) if (other !== actions) other.open = false;
-    refreshReview();
-  });
-  actions.addEventListener("keydown", event => {
-    if (event.key === "Escape") { actions.open = false; summary.focus(); }
-  });
   reviewControls.push(update);
   update();
-  menu.append(favorite, study, progress, feedback);
-  actions.append(summary, menu);
+  actions.append(favorite, study, feedback);
   return actions;
 }
 
@@ -354,9 +348,4 @@ document.documentElement.dataset.theme = theme.value;
 // 定期和重新聚焦时向本机服务校准日期，跨午夜或多标签页无需重新打开页面。
 setInterval(refreshReview, 30_000);
 window.addEventListener("focus", refreshReview);
-document.addEventListener("click", event => {
-  for (const menu of entries.querySelectorAll("details[open]")) {
-    if (!menu.contains(event.target)) menu.open = false;
-  }
-});
 load(true);
