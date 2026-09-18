@@ -1,7 +1,7 @@
 import Foundation
 import Network
 
-/// 按需启动的本机复习服务；仅允许读取历史及更新收藏、打卡状态。
+/// 本机复习服务；支持读取、删除单条历史及更新收藏、打卡状态。
 @MainActor
 final class ParsingHistoryServer {
     private let store: ParsingHistoryStore
@@ -175,7 +175,13 @@ final class ParsingHistoryServer {
         guard !token.isEmpty, headers["authorization"] == "Bearer " + token else { respond(id, status: 403); return }
         do {
             let components = path.split(separator: "/", omittingEmptySubsequences: false)
-            if components.count >= 4, components[1] == "api", components[2] == "review",
+            if method == "POST", components.count == 6,
+               components[1] == "api", components[2] == "history",
+               ParsingHistoryStore.isValidDay(String(components[3])),
+               let entryID = UUID(uuidString: String(components[4])), components[5] == "delete" {
+                try await store.deleteEntry(for: String(components[3]), entryID: entryID)
+                respond(id, status: 200)
+            } else if components.count >= 4, components[1] == "api", components[2] == "review",
                ParsingHistoryStore.isValidDay(String(components[3])) {
                 let day = String(components[3])
                 let snapshot: ParsingHistoryStore.ReviewSnapshot

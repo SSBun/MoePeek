@@ -1,0 +1,11 @@
+{
+  "head": "d380d64657690dac6a8a806eb965fac9585071ae",
+  "sha256": {
+    "Sources/Utilities/ParsingHistoryStore.swift": "d92c9ff2c5425b4859ec0d6b8be12ed20c241b8d8214444f011f6e9a51f255f5",
+    "Sources/Utilities/ParsingHistoryServer.swift": "64fc47a17f05d38a9dad38ae8ebfb34dbf0f6a22047f074ecb1e6d5942b92b9c",
+    "Resources/parsing-history.js": "4eda88e9d96558204bff3c84f81c3e19ee58c6ee9737bd74489b3cdc197d814a",
+    "Resources/parsing-history.css": "67b1c71f62fd81352a34a4f64e8be013d34458494b58d7870cb156996d83bacf",
+    "Resources/parsing-history.html": "8e96a179b5889c86a1af523fbae306ada18d3291e69430f27aa4ffaae30d191e",
+    "README_zh.md": "abba636250a7731786d9d09e2f640687a20e52bee4ef6b2b134ab0fc6fd6330f"
+  }
+}

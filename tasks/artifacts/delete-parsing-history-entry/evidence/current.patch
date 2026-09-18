@@ -1,0 +1,334 @@
+diff --git a/README_zh.md b/README_zh.md
+index 5738b22..2f134cb 100644
+--- a/README_zh.md
++++ b/README_zh.md
+@@ -117,7 +117,8 @@ MoePeek 是一个纯 **AI vibe coding** 的自用项目。它能满足我个人
+ - 回填把正文写入系统剪贴板，再执行原应用的正常 Paste 菜单动作，遵循原光标/选区；不会设置整框文本、发送全局按键或额外 Return。英文正文留在剪贴板中；若检测到外部剪贴板变化则停止，不覆盖用户的新复制内容。无法通过 AX 确认可编辑的终端/自定义控件可能需要手动粘贴。
+ - 结果仍可选择文字复制或右键 **复制**；右键复制保留全部解析信息，而非 JSON。两种复制都不应用译文首字母格式化，也不写入翻译历史。
+ - **本地学习笔记**：完整且格式有效的解析结果按完成时的本地日期追加到 `~/Library/Application Support/MoePeek/ParsingHistory/YYYY-MM-DD.jsonl`。每行包含格式版本、唯一 ID、完成时间、原文、服务／模型信息，以及对应的完整 `check` / `tutor` / `skip` 结果；**没有纠错项且没有有效改写建议的 Writing check 不保存**（空白改写也视为没有建议）。旧文件中的此类记录仅在网页中过滤，不删除或改写历史；tutor 和 skip 沿用原有保存规则，多模型结果分别记录。新记录采用 `schemaVersion: 2`，复习页继续兼容旧 `schemaVersion: 1` 的正文／自然表达格式，旧 JSONL 不迁移或改写。失败或取消且未产生完整结果的请求不记录。模型名取自提交时的快照，未指定时存为 `null`。已有 Markdown 文件保持原样，不自动迁移或在复习页展示。
+-- 点击菜单栏的 **英语复习**，或 **设置 → 通用 → 解析 → 英语复习**，在浏览器中通过左侧日期栏阅读笔记、搜索当天内容。原文与解析在同一张圆角卡片中直接展示，内容采用 14px 字号；解析保留原生面板的等宽字体及青色、黄色、红绿纠错配色，支持深浅色切换。窄屏时日期改为顶部选择器。页面不使用 CDN 或外部服务，历史不上传。只读 HTTP 服务按需启动，使用随机端口，仅监听 `127.0.0.1`；历史接口要求会话令牌，并检查 Host、Origin 和浏览器来源信息。退出 MoePeek 后服务关闭，重启后从应用重新打开页面即可读取之前保存的 JSONL。
++- 点击菜单栏的 **英语复习**，或 **设置 → 通用 → 解析 → 英语复习**，在浏览器中通过左侧日期栏阅读笔记、搜索当天内容。原文与解析在同一张圆角卡片中直接展示，内容采用 14px 字号；解析保留原生面板的等宽字体及青色、黄色、红绿纠错配色，支持深浅色切换。窄屏时日期改为顶部选择器。页面不使用 CDN 或外部服务，历史不上传。本机 HTTP 服务使用固定端口 `18765`，仅监听 `127.0.0.1`；端口被占用时启动失败，不自动切换端口；历史接口要求会话令牌，并检查 Host、Origin 和浏览器来源信息。退出 MoePeek 后服务关闭，重启后从应用重新打开页面即可读取之前保存的 JSONL。
++- 每张复习卡片右侧提供垃圾桶图标；确认后按日期和记录 ID 从本地 JSONL 删除该条，并清理其收藏、学习状态，刷新或重启后不再出现。其他行（包括损坏行）保留原始字节；缺少有效 ID 或 ID 重复时不执行不安全删除。删除无法撤销；先清理关联状态，再原子提交历史删除。失败时历史卡片仍可能保留，请刷新核对并重试。`skip` 是模型返回的“跳过解析”结果，目前仍会保存，可按需手动删除。
+ - **打开解析记录文件夹** 仍可打开实际存储目录。这些文件是本地明文，请留意备份和共享范围。写入失败（包括取锁超过一秒）会在解析面板提示，结果仍可复制使用。损坏或版本不支持的 JSONL 行会在页面显示跳过数量，不修改源文件；单日文件超过 64 MiB 时页面会明确提示读取失败，原始记录不会截断。
+ - 若提示没有可用 LLM，从菜单栏打开设置，在通用页选择解析服务，或到服务页配置对应账户/模型。
+ 
+diff --git a/Resources/parsing-history.css b/Resources/parsing-history.css
+index 7ea7056..2b6bd89 100644
+--- a/Resources/parsing-history.css
++++ b/Resources/parsing-history.css
+@@ -50,13 +50,15 @@ input { width: 100%; min-width: 0; }
+ #status { color: var(--note); font-size: 12px; line-height: 1.5; margin: 16px 0 20px; }
+ .entry { margin-bottom: 28px; }
+ .card-row { display: grid; grid-template-columns: minmax(0, 1fr) 34px; gap: 8px; align-items: start; }
+-.card-actions { position: relative; }
+-.card-actions summary { list-style: none; cursor: pointer; text-align: center; font-size: 22px; line-height: 34px; border-radius: 7px; }
+-.card-actions summary::-webkit-details-marker { display: none; }
+-.card-actions summary:hover, .card-actions[open] summary { background: var(--border); }
+-.card-menu { position: absolute; right: 0; top: 40px; z-index: 2; width: min(280px, 80vw); padding: 8px; border: 1px solid var(--border); border-radius: 10px; background: var(--card-top); box-shadow: 0 8px 24px #0003; }
+-.card-menu button { display: block; width: 100%; text-align: left; border: 0; }
+-.study-progress, .action-feedback { font-size: 12px; line-height: 1.5; color: var(--note); margin: 8px 4px 0; overflow-wrap: anywhere; }
++.card-actions { position: relative; display: flex; flex-direction: column; gap: 2px; }
++.card-actions button { width: 34px; height: 28px; min-height: 28px; padding: 0; border: 0; background: transparent; font-size: 16px; }
++.card-actions button:hover:not(:disabled) { background: var(--border); }
++.card-actions button[aria-pressed="true"] { color: var(--sentence); }
++.card-actions button.is-studied { background: var(--right); color: var(--background); opacity: 1; font-weight: 700; }
++.card-actions .delete-entry { color: var(--note); }
++.card-actions .delete-entry:hover:not(:disabled) { color: var(--wrong); }
++.delete-entry svg { width: 16px; height: 16px; vertical-align: middle; }
++.action-feedback { position: absolute; right: 42px; top: 0; width: 220px; padding: 8px; border: 1px solid var(--border); border-radius: 7px; background: var(--card-top); font-size: 12px; line-height: 1.5; color: var(--note); margin: 0; overflow-wrap: anywhere; }
+ .action-feedback:empty { display: none; }
+ .meta { padding: 0 4px; margin: 0 0 9px; color: var(--note); font-size: 12px; overflow-wrap: anywhere; }
+ .card {
+diff --git a/Resources/parsing-history.html b/Resources/parsing-history.html
+index 7c7305e..9a8be50 100644
+--- a/Resources/parsing-history.html
++++ b/Resources/parsing-history.html
+@@ -26,7 +26,7 @@
+         <p id="status" role="status" aria-live="polite">正在读取解析记录…</p>
+         <section id="entries" aria-label="解析记录"></section>
+         <button type="button" id="more" hidden>继续阅读</button>
+-        <footer>记录保存在本机。无纠错、无改写的检查结果不记录、不展示；已有文件保持原样。</footer>
++        <footer>记录保存在本机。无纠错、无改写的检查结果不记录、不展示；点击垃圾桶并确认可永久删除单条记录及其收藏、学习状态。</footer>
+       </div>
+     </div>
+   </main>
+diff --git a/Resources/parsing-history.js b/Resources/parsing-history.js
+index 9417dad..ccb2337 100644
+--- a/Resources/parsing-history.js
++++ b/Resources/parsing-history.js
+@@ -34,7 +34,7 @@ function element(tag, text, className) {
+ async function request(path, signal, method = "GET") {
+   const response = await fetch(path, { method, headers: { Authorization: `Bearer ${token}` }, cache: "no-store", signal });
+   if (response.status === 403) throw new Error("访问已过期，请从 MoePeek 的「英语复习」重新打开页面。");
+-  if (!response.ok) throw new Error("暂时无法读取或保存记录，请稍后刷新重试。原解析记录未被修改。");
++  if (!response.ok) throw new Error("操作未完成，请刷新核对当前记录后重试。");
+   return response;
+ }
+ 
+@@ -143,14 +143,26 @@ async function refreshReview() {
+ }
+ 
+ function cardActions(entry) {
+-  const actions = element("details", undefined, "card-actions");
+-  const summary = element("summary", "⋯");
+-  summary.setAttribute("aria-label", "收藏与学习菜单");
+-  const menu = element("div", undefined, "card-menu");
++  const actions = element("div", undefined, "card-actions");
++  actions.setAttribute("role", "group");
++  actions.setAttribute("aria-label", "收藏、学习与删除");
+   const favorite = element("button");
+   const study = element("button");
+-  favorite.type = study.type = "button";
+-  const progress = element("p", undefined, "study-progress");
++  const remove = element("button", undefined, "delete-entry");
++  favorite.type = study.type = remove.type = "button";
++  remove.setAttribute("aria-label", "删除这条记录");
++  const trash = document.createElementNS("http://www.w3.org/2000/svg", "svg");
++  trash.setAttribute("viewBox", "0 0 20 20");
++  trash.setAttribute("fill", "none");
++  trash.setAttribute("stroke", "currentColor");
++  trash.setAttribute("stroke-width", "1.5");
++  trash.setAttribute("stroke-linecap", "round");
++  trash.setAttribute("stroke-linejoin", "round");
++  trash.setAttribute("aria-hidden", "true");
++  const trashPath = document.createElementNS(trash.namespaceURI, "path");
++  trashPath.setAttribute("d", "M3 5h14M7 5V3h6v2M5 5l1 12h8l1-12M8 8v6M12 8v6");
++  trash.append(trashPath);
++  remove.append(trash);
+   const feedback = element("p", undefined, "action-feedback");
+   feedback.setAttribute("role", "status");
+   const key = typeof entry.id === "string" ? entry.id.toLowerCase() : "";
+@@ -160,31 +172,46 @@ function cardActions(entry) {
+     const state = reviewSnapshot?.states[key];
+     const events = state?.studyEvents || [];
+     const studied = events.some(event => event.day === reviewSnapshot?.today);
+-    favorite.textContent = state?.isFavorite ? "★ Unfavorite · 取消收藏" : "☆ Favorite · 收藏";
++    const favoriteLabel = state?.isFavorite ? "取消收藏" : "收藏";
++    favorite.textContent = state?.isFavorite ? "★" : "☆";
++    favorite.title = favoriteLabel;
++    favorite.setAttribute("aria-label", favoriteLabel);
+     favorite.setAttribute("aria-pressed", String(Boolean(state?.isFavorite)));
+-    study.textContent = studied ? "✓ Study · 今天已学习" : "Study · 今天学过了";
++    const studyLabel = studied ? "今天已学习" : "今天学过了";
++    study.textContent = "✓";
++    study.classList.toggle("is-studied", studied);
++    study.setAttribute("aria-label", studyLabel);
+     favorite.disabled = reviewBusy || !reviewSnapshot || !hasID;
+     study.disabled = favorite.disabled || studied;
++    remove.disabled = reviewBusy || !hasID;
++    remove.title = hasID ? "删除这条记录（同时删除收藏与学习状态）" : "此旧记录缺少有效标识，无法安全删除。";
+     const last = events.at(-1);
+-    progress.textContent = !hasID ? "此旧记录缺少有效标识，无法保存状态。"
++    const progress = !hasID ? "此旧记录缺少有效标识，无法保存状态。"
+       : !reviewSnapshot ? "收藏与学习状态暂不可用"
+       : `已学习 ${events.length} 次${last ? ` · 最近：${new Date(last.studiedAt).toLocaleString()}` : ""}`;
+-    progress.title = events.map(event => new Date(event.studiedAt).toLocaleString()).join("\n");
++    study.title = [studyLabel, progress, ...events.map(event => new Date(event.studiedAt).toLocaleString())].join("\n");
+   }
+   async function save(action) {
+-    if (reviewBusy || day !== daySelect.value) return;
++    if (reviewBusy || !hasID || day !== daySelect.value) return;
++    const deleting = action === "delete";
+     reviewBusy = true;
+     const version = ++reviewVersion;
+-    feedback.textContent = "正在保存…";
++    feedback.textContent = deleting ? "正在删除…" : "正在保存…";
+     updateReviewControls();
+     try {
+-      const snapshot = await (await request(`/api/review/${day}/${key}/${action}`, undefined, "POST")).json();
++      const path = deleting ? `/api/history/${day}/${key}/delete` : `/api/review/${day}/${key}/${action}`;
++      const response = await request(path, undefined, "POST");
++      const snapshot = deleting ? undefined : await response.json();
+       if (version !== reviewVersion) return;
+-      reviewSnapshot = snapshot;
+-      feedback.textContent = "已保存";
++      if (deleting) {
++        await load(true);
++      } else {
++        reviewSnapshot = snapshot;
++        feedback.textContent = "";
++      }
+     } catch (error) {
+       if (version !== reviewVersion) return;
+-      feedback.textContent = `保存未确认，请刷新后重试：${error.message}`;
++      feedback.textContent = `${deleting ? "删除" : "保存"}未确认，请刷新后重试：${error.message}`;
+     } finally {
+       reviewBusy = false;
+       updateReviewControls();
+@@ -193,18 +220,12 @@ function cardActions(entry) {
+   }
+   favorite.addEventListener("click", () => save(reviewSnapshot?.states[key]?.isFavorite ? "unfavorite" : "favorite"));
+   study.addEventListener("click", () => save("study"));
+-  actions.addEventListener("toggle", () => {
+-    if (!actions.open) return;
+-    for (const other of entries.querySelectorAll("details[open]")) if (other !== actions) other.open = false;
+-    refreshReview();
+-  });
+-  actions.addEventListener("keydown", event => {
+-    if (event.key === "Escape") { actions.open = false; summary.focus(); }
++  remove.addEventListener("click", () => {
++    if (window.confirm("确定从本地永久删除这条记录及其收藏、学习状态吗？此操作无法撤销。")) save("delete");
+   });
+   reviewControls.push(update);
+   update();
+-  menu.append(favorite, study, progress, feedback);
+-  actions.append(summary, menu);
++  actions.append(favorite, study, remove, feedback);
+   return actions;
+ }
+ 
+@@ -354,9 +375,4 @@ document.documentElement.dataset.theme = theme.value;
+ // 定期和重新聚焦时向本机服务校准日期，跨午夜或多标签页无需重新打开页面。
+ setInterval(refreshReview, 30_000);
+ window.addEventListener("focus", refreshReview);
+-document.addEventListener("click", event => {
+-  for (const menu of entries.querySelectorAll("details[open]")) {
+-    if (!menu.contains(event.target)) menu.open = false;
+-  }
+-});
+ load(true);
+diff --git a/Sources/Utilities/ParsingHistoryServer.swift b/Sources/Utilities/ParsingHistoryServer.swift
+index 1ef29b2..9203cb7 100644
+--- a/Sources/Utilities/ParsingHistoryServer.swift
++++ b/Sources/Utilities/ParsingHistoryServer.swift
+@@ -1,7 +1,7 @@
+ import Foundation
+ import Network
+ 
+-/// 按需启动的本机复习服务；仅允许读取历史及更新收藏、打卡状态。
++/// 本机复习服务；支持读取、删除单条历史及更新收藏、打卡状态。
+ @MainActor
+ final class ParsingHistoryServer {
+     private let store: ParsingHistoryStore
+@@ -50,7 +50,7 @@ final class ParsingHistoryServer {
+     private func startListener() async throws -> URL {
+         try Task.checkCancellation()
+         let parameters = NWParameters.tcp
+-        parameters.requiredLocalEndpoint = .hostPort(host: .ipv4(.loopback), port: .any)
++        parameters.requiredLocalEndpoint = .hostPort(host: .ipv4(.loopback), port: 18765)
+         let listener = try NWListener(using: parameters)
+         self.listener = listener
+         token = UUID().uuidString + UUID().uuidString
+@@ -175,7 +175,13 @@ final class ParsingHistoryServer {
+         guard !token.isEmpty, headers["authorization"] == "Bearer " + token else { respond(id, status: 403); return }
+         do {
+             let components = path.split(separator: "/", omittingEmptySubsequences: false)
+-            if components.count >= 4, components[1] == "api", components[2] == "review",
++            if method == "POST", components.count == 6,
++               components[1] == "api", components[2] == "history",
++               ParsingHistoryStore.isValidDay(String(components[3])),
++               let entryID = UUID(uuidString: String(components[4])), components[5] == "delete" {
++                try await store.deleteEntry(for: String(components[3]), entryID: entryID)
++                respond(id, status: 200)
++            } else if components.count >= 4, components[1] == "api", components[2] == "review",
+                ParsingHistoryStore.isValidDay(String(components[3])) {
+                 let day = String(components[3])
+                 let snapshot: ParsingHistoryStore.ReviewSnapshot
+diff --git a/Sources/Utilities/ParsingHistoryStore.swift b/Sources/Utilities/ParsingHistoryStore.swift
+index c3c6c8c..46e9357 100644
+--- a/Sources/Utilities/ParsingHistoryStore.swift
++++ b/Sources/Utilities/ParsingHistoryStore.swift
+@@ -1,7 +1,7 @@
+ import Darwin
+ import Foundation
+ 
+-/// 按本地日期追加完整解析结果；文件 IO 与界面状态分离，不截断或去重历史。
++/// 按本地日期保存完整解析结果；仅在用户明确删除时移除指定历史。
+ actor ParsingHistoryStore {
+     struct Entry: Codable, Sendable {
+         let schemaVersion: Int
+@@ -77,7 +77,9 @@ actor ParsingHistoryStore {
+             providerName: providerName, providerID: providerID, model: model, result: result
+         ))
+         data.append(0x0A)
+-        let fileURL = try prepareDirectory().appendingPathComponent(day + ".jsonl")
++        let lockDescriptor = try await lockHistory(for: day)
++        defer { flock(lockDescriptor, LOCK_UN); Darwin.close(lockDescriptor) }
++        let fileURL = directoryURL.appendingPathComponent(day + ".jsonl")
+         let descriptor = Darwin.open(fileURL.path, O_RDWR | O_APPEND | O_CREAT | O_CLOEXEC | O_NOFOLLOW | O_NONBLOCK, 0o600)
+         guard descriptor >= 0 else { throw POSIXError(POSIXErrorCode(rawValue: errno) ?? .EIO) }
+         defer { Darwin.close(descriptor) }
+@@ -114,6 +116,69 @@ actor ParsingHistoryStore {
+         return fileURL
+     }
+ 
++    /// 使用不会随 JSONL 原子替换而变化的锁文件，串行化同一天的全部写入。
++    private func lockHistory(for day: String) async throws -> Int32 {
++        guard Self.isValidDay(day) else { throw CocoaError(.fileWriteInvalidFileName) }
++        let url = try prepareDirectory().appendingPathComponent(day + ".lock")
++        let descriptor = Darwin.open(url.path, O_RDWR | O_CREAT | O_CLOEXEC | O_NOFOLLOW | O_NONBLOCK, 0o600)
++        guard descriptor >= 0 else { throw POSIXError(POSIXErrorCode(rawValue: errno) ?? .EIO) }
++        do {
++            var metadata = stat()
++            guard fstat(descriptor, &metadata) == 0,
++                  metadata.st_mode & S_IFMT == S_IFREG else { throw CocoaError(.fileWriteUnknown) }
++            let deadline = ContinuousClock.now.advanced(by: .seconds(1))
++            while flock(descriptor, LOCK_EX | LOCK_NB) != 0 {
++                let code = POSIXErrorCode(rawValue: errno) ?? .EIO
++                guard code == .EWOULDBLOCK || code == .EINTR else { throw POSIXError(code) }
++                guard ContinuousClock.now < deadline else { throw POSIXError(.EWOULDBLOCK) }
++                try await Task.sleep(for: .milliseconds(20))
++            }
++            try Task.checkCancellation()
++            return descriptor
++        } catch {
++            Darwin.close(descriptor)
++            throw error
++        }
++    }
++
++    /// 删除指定 UUID 的原始行及复习状态；重复请求可安全重试，其他行逐字节保留。
++    func deleteEntry(for day: String, entryID: UUID) async throws {
++        let lockDescriptor = try await lockHistory(for: day)
++        defer { flock(lockDescriptor, LOCK_UN); Darwin.close(lockDescriptor) }
++        let history = try contents(for: day)
++        var retained = Data()
++        var matches = 0
++        var start = history.startIndex
++        while start < history.endIndex {
++            let newline = history[start...].firstIndex(of: 0x0A)
++            let end = newline.map { history.index(after: $0) } ?? history.endIndex
++            let line = history[start..<end]
++            if let entry = try? JSONSerialization.jsonObject(with: Data(line)) as? [String: Any],
++               let rawID = entry["id"] as? String, UUID(uuidString: rawID) == entryID {
++                matches += 1
++            } else {
++                retained.append(contentsOf: line)
++            }
++            start = end
++        }
++        // 重复 ID 无法唯一定位，拒绝删除，避免一次操作影响多条记录。
++        guard matches <= 1 else { throw POSIXError(.EINVAL) }
++        var states = try reviewSnapshot(for: day).states
++        let stateKeys = states.keys.filter { UUID(uuidString: $0) == entryID }
++        for key in stateKeys { states.removeValue(forKey: key) }
++        let encoder = JSONEncoder()
++        encoder.dateEncodingStrategy = .iso8601
++        let stateData = try encoder.encode(states)
++        guard stateData.count <= 64 * 1024 * 1024 else { throw CocoaError(.fileWriteOutOfSpace) }
++        // 先清理关联状态；若历史提交失败，卡片仍保留，用户可以继续点击重试。
++        if !stateKeys.isEmpty {
++            try stateData.write(to: directoryURL.appendingPathComponent(day + ".review.json"), options: [.atomic])
++        }
++        if matches == 1 {
++            try retained.write(to: directoryURL.appendingPathComponent(day + ".jsonl"), options: [.atomic])
++        }
++    }
++
+     /// 只列出按日期命名的普通 JSONL 文件，不读取旧 Markdown 或符号链接。
+     func days() throws -> [String] {
+         let directory = try prepareDirectory()
+@@ -165,10 +230,12 @@ actor ParsingHistoryStore {
+     }
+ 
+     /// 在同一个 actor 临界区读取、限次并原子保存；失败时不返回成功状态。
+-    func updateReview(for day: String, entryID: UUID, action: String) throws -> ReviewSnapshot {
++    func updateReview(for day: String, entryID: UUID, action: String) async throws -> ReviewSnapshot {
+         guard ["favorite", "unfavorite", "study"].contains(action) else {
+             throw POSIXError(.EINVAL)
+         }
++        let lockDescriptor = try await lockHistory(for: day)
++        defer { flock(lockDescriptor, LOCK_UN); Darwin.close(lockDescriptor) }
+         let history = try contents(for: day)
+         let exists = history.split(separator: 0x0A).contains { line in
+             guard let entry = try? JSONSerialization.jsonObject(with: Data(line)) as? [String: Any],

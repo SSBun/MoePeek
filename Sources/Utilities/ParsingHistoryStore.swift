@@ -1,7 +1,7 @@
 import Darwin
 import Foundation
 
-/// 按本地日期追加完整解析结果；文件 IO 与界面状态分离，不截断或去重历史。
+/// 按本地日期保存完整解析结果；仅在用户明确删除时移除指定历史。
 actor ParsingHistoryStore {
     struct Entry: Codable, Sendable {
         let schemaVersion: Int
@@ -77,7 +77,9 @@ actor ParsingHistoryStore {
             providerName: providerName, providerID: providerID, model: model, result: result
         ))
         data.append(0x0A)
-        let fileURL = try prepareDirectory().appendingPathComponent(day + ".jsonl")
+        let lockDescriptor = try await lockHistory(for: day)
+        defer { flock(lockDescriptor, LOCK_UN); Darwin.close(lockDescriptor) }
+        let fileURL = directoryURL.appendingPathComponent(day + ".jsonl")
         let descriptor = Darwin.open(fileURL.path, O_RDWR | O_APPEND | O_CREAT | O_CLOEXEC | O_NOFOLLOW | O_NONBLOCK, 0o600)
         guard descriptor >= 0 else { throw POSIXError(POSIXErrorCode(rawValue: errno) ?? .EIO) }
         defer { Darwin.close(descriptor) }
@@ -112,6 +114,69 @@ actor ParsingHistoryStore {
             throw error
         }
         return fileURL
+    }
+
+    /// 使用不会随 JSONL 原子替换而变化的锁文件，串行化同一天的全部写入。
+    private func lockHistory(for day: String) async throws -> Int32 {
+        guard Self.isValidDay(day) else { throw CocoaError(.fileWriteInvalidFileName) }
+        let url = try prepareDirectory().appendingPathComponent(day + ".lock")
+        let descriptor = Darwin.open(url.path, O_RDWR | O_CREAT | O_CLOEXEC | O_NOFOLLOW | O_NONBLOCK, 0o600)
+        guard descriptor >= 0 else { throw POSIXError(POSIXErrorCode(rawValue: errno) ?? .EIO) }
+        do {
+            var metadata = stat()
+            guard fstat(descriptor, &metadata) == 0,
+                  metadata.st_mode & S_IFMT == S_IFREG else { throw CocoaError(.fileWriteUnknown) }
+            let deadline = ContinuousClock.now.advanced(by: .seconds(1))
+            while flock(descriptor, LOCK_EX | LOCK_NB) != 0 {
+                let code = POSIXErrorCode(rawValue: errno) ?? .EIO
+                guard code == .EWOULDBLOCK || code == .EINTR else { throw POSIXError(code) }
+                guard ContinuousClock.now < deadline else { throw POSIXError(.EWOULDBLOCK) }
+                try await Task.sleep(for: .milliseconds(20))
+            }
+            try Task.checkCancellation()
+            return descriptor
+        } catch {
+            Darwin.close(descriptor)
+            throw error
+        }
+    }
+
+    /// 删除指定 UUID 的原始行及复习状态；重复请求可安全重试，其他行逐字节保留。
+    func deleteEntry(for day: String, entryID: UUID) async throws {
+        let lockDescriptor = try await lockHistory(for: day)
+        defer { flock(lockDescriptor, LOCK_UN); Darwin.close(lockDescriptor) }
+        let history = try contents(for: day)
+        var retained = Data()
+        var matches = 0
+        var start = history.startIndex
+        while start < history.endIndex {
+            let newline = history[start...].firstIndex(of: 0x0A)
+            let end = newline.map { history.index(after: $0) } ?? history.endIndex
+            let line = history[start..<end]
+            if let entry = try? JSONSerialization.jsonObject(with: Data(line)) as? [String: Any],
+               let rawID = entry["id"] as? String, UUID(uuidString: rawID) == entryID {
+                matches += 1
+            } else {
+                retained.append(contentsOf: line)
+            }
+            start = end
+        }
+        // 重复 ID 无法唯一定位，拒绝删除，避免一次操作影响多条记录。
+        guard matches <= 1 else { throw POSIXError(.EINVAL) }
+        var states = try reviewSnapshot(for: day).states
+        let stateKeys = states.keys.filter { UUID(uuidString: $0) == entryID }
+        for key in stateKeys { states.removeValue(forKey: key) }
+        let encoder = JSONEncoder()
+        encoder.dateEncodingStrategy = .iso8601
+        let stateData = try encoder.encode(states)
+        guard stateData.count <= 64 * 1024 * 1024 else { throw CocoaError(.fileWriteOutOfSpace) }
+        // 先清理关联状态；若历史提交失败，卡片仍保留，用户可以继续点击重试。
+        if !stateKeys.isEmpty {
+            try stateData.write(to: directoryURL.appendingPathComponent(day + ".review.json"), options: [.atomic])
+        }
+        if matches == 1 {
+            try retained.write(to: directoryURL.appendingPathComponent(day + ".jsonl"), options: [.atomic])
+        }
     }
 
     /// 只列出按日期命名的普通 JSONL 文件，不读取旧 Markdown 或符号链接。
@@ -165,10 +230,12 @@ actor ParsingHistoryStore {
     }
 
     /// 在同一个 actor 临界区读取、限次并原子保存；失败时不返回成功状态。
-    func updateReview(for day: String, entryID: UUID, action: String) throws -> ReviewSnapshot {
+    func updateReview(for day: String, entryID: UUID, action: String) async throws -> ReviewSnapshot {
         guard ["favorite", "unfavorite", "study"].contains(action) else {
             throw POSIXError(.EINVAL)
         }
+        let lockDescriptor = try await lockHistory(for: day)
+        defer { flock(lockDescriptor, LOCK_UN); Darwin.close(lockDescriptor) }
         let history = try contents(for: day)
         let exists = history.split(separator: 0x0A).contains { line in
             guard let entry = try? JSONSerialization.jsonObject(with: Data(line)) as? [String: Any],

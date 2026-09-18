@@ -55,6 +55,9 @@ input { width: 100%; min-width: 0; }
 .card-actions button:hover:not(:disabled) { background: var(--border); }
 .card-actions button[aria-pressed="true"] { color: var(--sentence); }
 .card-actions button.is-studied { background: var(--right); color: var(--background); opacity: 1; font-weight: 700; }
+.card-actions .delete-entry { color: var(--note); }
+.card-actions .delete-entry:hover:not(:disabled) { color: var(--wrong); }
+.delete-entry svg { width: 16px; height: 16px; vertical-align: middle; }
 .action-feedback { position: absolute; right: 42px; top: 0; width: 220px; padding: 8px; border: 1px solid var(--border); border-radius: 7px; background: var(--card-top); font-size: 12px; line-height: 1.5; color: var(--note); margin: 0; overflow-wrap: anywhere; }
 .action-feedback:empty { display: none; }
 .meta { padding: 0 4px; margin: 0 0 9px; color: var(--note); font-size: 12px; overflow-wrap: anywhere; }

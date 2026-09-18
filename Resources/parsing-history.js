@@ -34,7 +34,7 @@ function element(tag, text, className) {
 async function request(path, signal, method = "GET") {
   const response = await fetch(path, { method, headers: { Authorization: `Bearer ${token}` }, cache: "no-store", signal });
   if (response.status === 403) throw new Error("访问已过期，请从 MoePeek 的「英语复习」重新打开页面。");
-  if (!response.ok) throw new Error("暂时无法读取或保存记录，请稍后刷新重试。原解析记录未被修改。");
+  if (!response.ok) throw new Error("操作未完成，请刷新核对当前记录后重试。");
   return response;
 }
 
@@ -145,10 +145,24 @@ async function refreshReview() {
 function cardActions(entry) {
   const actions = element("div", undefined, "card-actions");
   actions.setAttribute("role", "group");
-  actions.setAttribute("aria-label", "收藏与学习");
+  actions.setAttribute("aria-label", "收藏、学习与删除");
   const favorite = element("button");
   const study = element("button");
-  favorite.type = study.type = "button";
+  const remove = element("button", undefined, "delete-entry");
+  favorite.type = study.type = remove.type = "button";
+  remove.setAttribute("aria-label", "删除这条记录");
+  const trash = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  trash.setAttribute("viewBox", "0 0 20 20");
+  trash.setAttribute("fill", "none");
+  trash.setAttribute("stroke", "currentColor");
+  trash.setAttribute("stroke-width", "1.5");
+  trash.setAttribute("stroke-linecap", "round");
+  trash.setAttribute("stroke-linejoin", "round");
+  trash.setAttribute("aria-hidden", "true");
+  const trashPath = document.createElementNS(trash.namespaceURI, "path");
+  trashPath.setAttribute("d", "M3 5h14M7 5V3h6v2M5 5l1 12h8l1-12M8 8v6M12 8v6");
+  trash.append(trashPath);
+  remove.append(trash);
   const feedback = element("p", undefined, "action-feedback");
   feedback.setAttribute("role", "status");
   const key = typeof entry.id === "string" ? entry.id.toLowerCase() : "";
@@ -169,6 +183,8 @@ function cardActions(entry) {
     study.setAttribute("aria-label", studyLabel);
     favorite.disabled = reviewBusy || !reviewSnapshot || !hasID;
     study.disabled = favorite.disabled || studied;
+    remove.disabled = reviewBusy || !hasID;
+    remove.title = hasID ? "删除这条记录（同时删除收藏与学习状态）" : "此旧记录缺少有效标识，无法安全删除。";
     const last = events.at(-1);
     const progress = !hasID ? "此旧记录缺少有效标识，无法保存状态。"
       : !reviewSnapshot ? "收藏与学习状态暂不可用"
@@ -176,19 +192,26 @@ function cardActions(entry) {
     study.title = [studyLabel, progress, ...events.map(event => new Date(event.studiedAt).toLocaleString())].join("\n");
   }
   async function save(action) {
-    if (reviewBusy || day !== daySelect.value) return;
+    if (reviewBusy || !hasID || day !== daySelect.value) return;
+    const deleting = action === "delete";
     reviewBusy = true;
     const version = ++reviewVersion;
-    feedback.textContent = "正在保存…";
+    feedback.textContent = deleting ? "正在删除…" : "正在保存…";
     updateReviewControls();
     try {
-      const snapshot = await (await request(`/api/review/${day}/${key}/${action}`, undefined, "POST")).json();
+      const path = deleting ? `/api/history/${day}/${key}/delete` : `/api/review/${day}/${key}/${action}`;
+      const response = await request(path, undefined, "POST");
+      const snapshot = deleting ? undefined : await response.json();
       if (version !== reviewVersion) return;
-      reviewSnapshot = snapshot;
-      feedback.textContent = "";
+      if (deleting) {
+        await load(true);
+      } else {
+        reviewSnapshot = snapshot;
+        feedback.textContent = "";
+      }
     } catch (error) {
       if (version !== reviewVersion) return;
-      feedback.textContent = `保存未确认，请刷新后重试：${error.message}`;
+      feedback.textContent = `${deleting ? "删除" : "保存"}未确认，请刷新后重试：${error.message}`;
     } finally {
       reviewBusy = false;
       updateReviewControls();
@@ -197,9 +220,12 @@ function cardActions(entry) {
   }
   favorite.addEventListener("click", () => save(reviewSnapshot?.states[key]?.isFavorite ? "unfavorite" : "favorite"));
   study.addEventListener("click", () => save("study"));
+  remove.addEventListener("click", () => {
+    if (window.confirm("确定从本地永久删除这条记录及其收藏、学习状态吗？此操作无法撤销。")) save("delete");
+  });
   reviewControls.push(update);
   update();
-  actions.append(favorite, study, feedback);
+  actions.append(favorite, study, remove, feedback);
   return actions;
 }
 
