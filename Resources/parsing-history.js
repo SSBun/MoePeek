@@ -165,6 +165,7 @@ function cardActions(entry) {
     favorite.setAttribute("aria-pressed", String(Boolean(state?.isFavorite)));
     const studyLabel = studied ? "今天已学习" : "今天学过了";
     study.textContent = "✓";
+    study.classList.toggle("is-studied", studied);
     study.setAttribute("aria-label", studyLabel);
     favorite.disabled = reviewBusy || !reviewSnapshot || !hasID;
     study.disabled = favorite.disabled || studied;
