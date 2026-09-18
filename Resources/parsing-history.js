@@ -19,7 +19,9 @@ let skipped = 0;
 let visibleCount = 30;
 let generation = 0;
 let controller;
-let reviewSnapshot;
+const favoritesView = "favorites";
+let availableDays = [];
+let reviewSnapshots = new Map();
 let reviewVersion = 0;
 let reviewBusy = false;
 let reviewControls = [];
@@ -128,16 +130,22 @@ function updateReviewControls() {
 async function refreshReview() {
   if (!daySelect.value || reviewBusy || !records.length) return;
   const version = ++reviewVersion;
-  const day = daySelect.value;
+  const days = daySelect.value === favoritesView ? availableDays : [daySelect.value];
   try {
-    const snapshot = await (await request(`/api/review/${day}`)).json();
-    if (version !== reviewVersion) return;
-    reviewSnapshot = snapshot;
-    updateReviewControls();
+    const snapshots = new Map();
+    for (const day of days) {
+      const snapshot = await (await request(`/api/review/${day}`)).json();
+      if (version !== reviewVersion) return;
+      snapshots.set(day, snapshot);
+    }
+    reviewSnapshots = snapshots;
+    if (daySelect.value === favoritesView) render();
+    else updateReviewControls();
   } catch (error) {
     if (version !== reviewVersion) return;
-    reviewSnapshot = undefined;
-    updateReviewControls();
+    reviewSnapshots.clear();
+    if (daySelect.value === favoritesView) render();
+    else updateReviewControls();
     status.textContent = `无法读取收藏与学习状态：${error.message}`;
   }
 }
@@ -167,8 +175,10 @@ function cardActions(entry) {
   feedback.setAttribute("role", "status");
   const key = typeof entry.id === "string" ? entry.id.toLowerCase() : "";
   const hasID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(key);
-  const day = daySelect.value;
+  const day = entry.historyDay;
+  const cardGeneration = generation;
   function update() {
+    const reviewSnapshot = reviewSnapshots.get(day);
     const state = reviewSnapshot?.states[key];
     const events = state?.studyEvents || [];
     const studied = events.some(event => event.day === reviewSnapshot?.today);
@@ -192,7 +202,7 @@ function cardActions(entry) {
     study.title = [studyLabel, progress, ...events.map(event => new Date(event.studiedAt).toLocaleString())].join("\n");
   }
   async function save(action) {
-    if (reviewBusy || !hasID || day !== daySelect.value) return;
+    if (reviewBusy || !hasID || cardGeneration !== generation) return;
     const deleting = action === "delete";
     reviewBusy = true;
     const version = ++reviewVersion;
@@ -206,8 +216,9 @@ function cardActions(entry) {
       if (deleting) {
         await load(true);
       } else {
-        reviewSnapshot = snapshot;
+        reviewSnapshots.set(day, snapshot);
         feedback.textContent = "";
+        if (daySelect.value === favoritesView) render();
       }
     } catch (error) {
       if (version !== reviewVersion) return;
@@ -218,7 +229,7 @@ function cardActions(entry) {
       if (version !== reviewVersion) refreshReview();
     }
   }
-  favorite.addEventListener("click", () => save(reviewSnapshot?.states[key]?.isFavorite ? "unfavorite" : "favorite"));
+  favorite.addEventListener("click", () => save(reviewSnapshots.get(day)?.states[key]?.isFavorite ? "unfavorite" : "favorite"));
   study.addEventListener("click", () => save("study"));
   remove.addEventListener("click", () => {
     if (window.confirm("确定从本地永久删除这条记录及其收藏、学习状态吗？此操作无法撤销。")) save("delete");
@@ -234,7 +245,8 @@ function card(entry) {
   const time = new Date(entry.completedAt);
   const model = typeof entry.model === "string" && entry.model ? ` · ${entry.model}` : "";
   const timestamp = Number.isNaN(time.getTime()) ? "" : time.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-  article.append(element("p", `${timestamp} · ${entry.providerName}${model}`, "meta"));
+  const date = daySelect.value === favoritesView ? `${entry.historyDay} ` : "";
+  article.append(element("p", `${date}${timestamp} · ${entry.providerName}${model}`, "meta"));
   const body = element("div", undefined, "card");
   body.append(element("h2", entry.sourceText, "source"));
   const result = entry.result;
@@ -276,13 +288,17 @@ function card(entry) {
 
 function render() {
   const query = search.value.trim().toLocaleLowerCase();
-  const filtered = records.filter(entry => entry.searchText.includes(query));
+  const favoritesOnly = daySelect.value === favoritesView;
+  const selected = favoritesOnly ? records.filter(entry =>
+    reviewSnapshots.get(entry.record.historyDay)?.states[String(entry.record.id).toLowerCase()]?.isFavorite) : records;
+  const filtered = selected.filter(entry => entry.searchText.includes(query));
   reviewControls = [];
   entries.replaceChildren(...filtered.slice(0, visibleCount).map(entry => card(entry.record)));
   more.hidden = filtered.length <= visibleCount;
   const warning = skipped ? ` ${skipped} 条损坏或版本不支持的记录未显示，原文件已保留。` : "";
-  status.textContent = (filtered.length ? `${filtered.length} 条解析${query ? " · 当天搜索结果" : ""}`
-    : records.length ? "没有匹配的解析，试试其他关键词。" : "这一天没有需要复习的解析。") + warning;
+  status.textContent = (filtered.length ? `${filtered.length} 条${favoritesOnly ? "收藏" : "解析"}${query ? " · 搜索结果" : ""}`
+    : selected.length ? "没有匹配的解析，试试其他关键词。"
+      : favoritesOnly ? "还没有收藏的解析。" : "这一天没有需要复习的解析。") + warning;
 }
 
 function updateSelectedDay() {
@@ -293,8 +309,8 @@ function updateSelectedDay() {
 
 function renderDates(days) {
   dates.replaceChildren();
-  for (const day of days) {
-    const button = element("button", day);
+  for (const day of [favoritesView, ...days]) {
+    const button = element("button", day === favoritesView ? "★ 收藏" : day);
     button.type = "button";
     button.dataset.day = day;
     button.addEventListener("click", () => { daySelect.value = day; load(); });
@@ -307,7 +323,7 @@ function renderDates(days) {
 async function load(reloadDays = false) {
   const current = ++generation;
   ++reviewVersion;
-  reviewSnapshot = undefined;
+  reviewSnapshots.clear();
   reviewControls = [];
   controller?.abort();
   controller = new AbortController();
@@ -320,6 +336,9 @@ async function load(reloadDays = false) {
   search.disabled = true;
   refresh.disabled = true;
   updateSelectedDay();
+  const searchLabel = daySelect.value === favoritesView ? "搜索全部收藏" : "搜索当天内容";
+  search.placeholder = searchLabel;
+  search.setAttribute("aria-label", searchLabel);
   status.textContent = "正在读取解析记录…";
   try {
     if (!token) throw new Error("请从 MoePeek 菜单中的「英语复习」打开此页。");
@@ -330,29 +349,40 @@ async function load(reloadDays = false) {
         throw new Error("日期目录格式不正确，请重新打开页面。");
       }
       const previous = daySelect.value;
-      daySelect.replaceChildren(...days.map(day => { const option = element("option", day); option.value = day; return option; }));
-      daySelect.disabled = !days.length;
-      if (days.includes(previous)) daySelect.value = previous;
+      availableDays = days;
+      daySelect.replaceChildren(...[...days, favoritesView].map(day => {
+        const option = element("option", day === favoritesView ? "★ 收藏" : day);
+        option.value = day;
+        return option;
+      }));
+      daySelect.disabled = false;
+      if (previous === favoritesView || days.includes(previous)) daySelect.value = previous;
       renderDates(days);
     }
     if (!daySelect.value) {
       status.textContent = "还没有学习笔记。在 MoePeek 完成一次有学习内容的解析后，点击「刷新记录」。";
       return;
     }
-    const text = await (await request(`/api/history/${daySelect.value}`, signal)).text();
-    if (current !== generation) return;
-    for (const line of text.split("\n")) {
-      if (!line.trim()) continue;
-      try {
-        const record = JSON.parse(line);
-        if (!validRecord(record)) { skipped++; continue; }
-        if (!hasReviewContent(record)) continue;
-        const searchText = [record.sourceText, ...resultSearchParts(record)]
-          .filter(Boolean).join("\n").toLocaleLowerCase();
-        records.push({ record, searchText });
-      } catch { skipped++; }
+    const days = daySelect.value === favoritesView ? availableDays : [daySelect.value];
+    const loadedRecords = [];
+    for (const day of days) {
+      const text = await (await request(`/api/history/${day}`, signal)).text();
+      if (current !== generation) return;
+      const dayRecords = [];
+      for (const line of text.split("\n")) {
+        if (!line.trim()) continue;
+        try {
+          const record = JSON.parse(line);
+          if (!validRecord(record)) { skipped++; continue; }
+          if (!hasReviewContent(record)) continue;
+          const searchText = [record.sourceText, ...resultSearchParts(record)]
+            .filter(Boolean).join("\n").toLocaleLowerCase();
+          dayRecords.push({ record: { ...record, historyDay: day }, searchText });
+        } catch { skipped++; }
+      }
+      loadedRecords.push(...dayRecords.reverse());
     }
-    records.reverse();
+    records = loadedRecords;
     visibleCount = 30;
     loaded = true;
     render();
