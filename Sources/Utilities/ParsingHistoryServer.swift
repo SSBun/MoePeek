@@ -50,7 +50,7 @@ final class ParsingHistoryServer {
     private func startListener() async throws -> URL {
         try Task.checkCancellation()
         let parameters = NWParameters.tcp
-        parameters.requiredLocalEndpoint = .hostPort(host: .ipv4(.loopback), port: .any)
+        parameters.requiredLocalEndpoint = .hostPort(host: .ipv4(.loopback), port: 18765)
         let listener = try NWListener(using: parameters)
         self.listener = listener
         token = UUID().uuidString + UUID().uuidString
