@@ -1,0 +1,10 @@
+{
+  "sha256": {
+    "Sources/Core/ParsingCoordinator.swift": "ffa9ca3d22be2e57fae9298466b6d35d8e27a89c92da45ae4c649390b90f9fa2",
+    "Sources/Core/SmartTranslationCoordinator.swift": "7dc54b493786634e8275b27e36616d9f1b2345c87eade530c13b120f4be8ce96",
+    "Sources/UI/ParsingPanel/ParsingPanelView.swift": "bf0fca579f3239addc787eaf51d22fb97c92bb94fbfee66c530a734d94174e28",
+    "Sources/UI/SmartTranslationPanel/SmartTranslationPanelView.swift": "6ecd0e77845a86fff8ae3a2543d8267a571bc38d1185eb566ec2608d4e4eb65b",
+    "tasks/artifacts/show-complete-corrected-sentence/evidence/dark.png": "11b8f4cc4b6dd19cd9b970940056e4e4b1bded27fbe47ebed5f47bb9c441b14e",
+    "tasks/artifacts/show-complete-corrected-sentence/evidence/light.png": "c8493545c6621e1aed6ad70dc96d1bfc067427e8ec23a355aebb70e052a5a663"
+  }
+}

@@ -141,7 +141,7 @@ struct SmartTranslationPanelView: View {
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
-                StyledParsingResultView(result: parsing)
+                StyledParsingResultView(result: parsing, sourceText: coordinator.submittedText)
             }
         case .skip:
             Text(result.plainText).foregroundStyle(.secondary)

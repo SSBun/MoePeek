@@ -47,7 +47,8 @@ final class SmartTranslationCoordinator {
     private let historyStore: ParsingHistoryStore
     private var tasks: [String: Task<Void, Never>] = [:]
     private var generation = 0
-    private var submittedText: String?
+    /// 当前结果对应的提交原文，供面板生成完整纠正句。
+    private(set) var submittedText: String?
 
     init(registry: TranslationProviderRegistry, historyStore: ParsingHistoryStore) {
         self.registry = registry

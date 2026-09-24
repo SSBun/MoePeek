@@ -52,7 +52,7 @@
 
 ### Structure
 - 智能模式替代旧单词入口；首个 LLM 请求按语义区分中英文词语与句子，词语直接得到完整词条，句子随后将原输入发送到未改写的 parsing 协议。
-- ParsingTextEditor、StyledParsingResultView 与 ParsingPanel 同时供解析和智能模式使用；改动共享输入、结果或窗口时需检查两个入口的行为。
+- ParsingTextEditor、StyledParsingResultView 与 ParsingPanel 同时供解析和智能模式使用；改动共享输入、结果或窗口时需检查两个入口的行为。完整纠错句复用 ParsingResult.pasteText，结果视图读取各协调器的 submittedText 提交快照，不使用正在编辑的草稿；无法唯一、安全合成时保留逐项说明，不猜测整句。
 
 ### Relationships
 - 智能句子的解析结果保存到与 ParsingCoordinator 共享的 ParsingHistoryStore；词条不保存，中文译文不扩展现有历史格式。说明语言沿用 parsingExplanationLanguage。

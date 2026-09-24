@@ -102,7 +102,7 @@ struct ParsingPanelView: View {
                         case .waiting, .parsing:
                             Text("Parsing…").foregroundStyle(.secondary)
                         case let .completed(result):
-                            StyledParsingResultView(result: result)
+                            StyledParsingResultView(result: result, sourceText: coordinator.submittedText)
                                 .textSelection(.enabled)
                                 .contextMenu {
                                     Button("Copy") {
@@ -124,6 +124,8 @@ struct ParsingPanelView: View {
 /// 与参考图一致的分组与语义配色，不把模型返回的 JSON 直接显示给用户。
 struct StyledParsingResultView: View {
     let result: ParsingResult
+    /// 结果对应的提交快照，不能使用用户正在编辑的输入。
+    let sourceText: String?
     @Environment(\.colorScheme) private var colorScheme
 
     private var accentColor: Color {
@@ -156,8 +158,9 @@ struct StyledParsingResultView: View {
                         }
                     }
                 }
-                if let rephrase {
-                    Text(verbatim: "◇ " + rephrase).foregroundStyle(sentenceColor)
+                if !items.isEmpty || rephrase != nil,
+                   let sentence = rephrase ?? sourceText.flatMap({ result.pasteText(for: $0) }) {
+                    Text(verbatim: "◇ " + sentence).foregroundStyle(sentenceColor)
                 }
             case let .tutor(sentence, words, grammar):
                 header("Writing tutor", symbol: "character.book.closed")

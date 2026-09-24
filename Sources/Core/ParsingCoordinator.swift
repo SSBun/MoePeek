@@ -62,7 +62,8 @@ final class ParsingCoordinator {
     private let registry: TranslationProviderRegistry
     private var tasks: [String: Task<Void, Never>] = [:]
     private var generation = 0
-    private var submittedText: String?
+    /// 当前结果对应的提交原文，供面板生成完整纠正句；不随未提交草稿变化。
+    private(set) var submittedText: String?
 
     init(registry: TranslationProviderRegistry, historyStore: ParsingHistoryStore = ParsingHistoryStore()) {
         self.registry = registry
