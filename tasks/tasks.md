@@ -1,5 +1,7 @@
 # 任务索引
 
+- [修复 iTerm2 中 Pi 输入区自动回填失败](tasks/fix-iterm2-text-writeback.md) — In Progress (2026-09-20 11:21)
+
 - [纠错面板同时展示完整修正句子](tasks/show-complete-corrected-sentence.md) — Completed (2026-09-18 14:35)
 
 - [新增记录后自动更新复习网页](tasks/auto-refresh-history-records.md) — Completed (2026-09-18 13:52)

@@ -63,6 +63,10 @@ struct ParsingPasteTarget {
         pasteboard.clearContents()
         guard pasteboard.setString(text, forType: .string) else { throw ParsingPasteError.clipboardFailed }
         let ownedChangeCount = pasteboard.changeCount
+        if Self.read(command, kAXEnabledAttribute) as? Bool != true {
+            // iTerm2 等应用只在打开菜单时重新验证 Paste；等待剪贴板变化不会刷新缓存状态。
+            try refreshPasteMenu(containing: command)
+        }
         let commandDeadline = Date().addingTimeInterval(0.3)
         repeat {
             try Task.checkCancellation()
@@ -77,6 +81,27 @@ struct ParsingPasteTarget {
             try await Task.sleep(for: .milliseconds(20))
         } while Date() < commandDeadline
         throw ParsingPasteError.pasteUnavailable
+    }
+
+    /// 尝试打开并关闭 Paste 所属的顶层菜单以更新状态；不支持时保留原有等待逻辑。
+    private func refreshPasteMenu(containing command: AXUIElement) throws {
+        guard let menu = Self.element(Self.read(command, kAXParentAttribute)),
+              Self.read(menu, kAXRoleAttribute) as? String == kAXMenuRole as String,
+              let menuBarItem = Self.element(Self.read(menu, kAXParentAttribute)),
+              Self.read(menuBarItem, kAXRoleAttribute) as? String == kAXMenuBarItemRole as String else { return }
+        var menuActions: CFArray?
+        var itemActions: CFArray?
+        guard AXUIElementCopyActionNames(menu, &menuActions) == .success,
+              (menuActions as? [String])?.contains(kAXCancelAction as String) == true,
+              AXUIElementCopyActionNames(menuBarItem, &itemActions) == .success,
+              (itemActions as? [String])?.contains(kAXPressAction as String) == true else { return }
+        try Task.checkCancellation()
+        try validate(requireForeground: true)
+        let opened = AXUIElementPerformAction(menuBarItem, kAXPressAction as CFString)
+        // 即便打开返回失败，也尝试关闭可能已出现的菜单；不发送 Escape 或其他全局按键。
+        let closed = AXUIElementPerformAction(menu, kAXCancelAction as CFString)
+        guard opened == .success, closed == .success else { throw ParsingPasteError.pasteUnavailable }
+        try validate(requireForeground: true)
     }
 
     private func validate(requireForeground: Bool) throws {

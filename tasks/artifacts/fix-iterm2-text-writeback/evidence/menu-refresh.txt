@@ -1,0 +1,21 @@
+iTerm2 菜单运行时诊断（不执行 Paste、不发送键盘事件）
+
+复现：保存在内存中的原剪贴板类型和数据；临时清空剪贴板后打开/关闭 Edit 菜单，使原生 Paste 进入禁用状态；临时写入无害文本，等待 350ms；调用当前生产文件中的 refreshPasteMenu，再核对窗口、输入区和选区。完成后仅在剪贴板仍归诊断所有时恢复原内容。未输出或持久化任何用户剪贴板内容。
+
+诊断编译使用当前 ParsingPasteTarget.swift 的完整副本，在同一临时文件追加 extension，以直接调用 private capture/pasteCommand/refreshPasteMenu/validate；没有复制修改这些函数。没有调用 paste(_:) 或 Paste 的 AXPress。
+命令：xcrun swiftc -swift-version 6 -strict-concurrency=complete /tmp/moepeek-iterm-paste-diagnostic.swift -o /tmp/moepeek-iterm-paste-diagnostic
+命令：/tmp/moepeek-iterm-paste-diagnostic
+生产文件 SHA256：a0175cdaae1148a04064041707eaeb8ade0bfa89a55e4be3bc3e5cf517b4887b
+
+实际输出：
+Production helper + empty clipboard, Paste enabled: Optional(false)
+Before production helper, 350ms after text: Optional(false)
+After production helper, Paste enabled: Optional(true)
+Original app/window/input/selection validation passed; no Paste or key events executed
+Original clipboard restored
+
+构建命令：xcodebuild -workspace MoePeek.xcworkspace -scheme MoePeek -configuration Debug -destination 'platform=macOS' build
+实际输出：** BUILD SUCCEEDED ** [2.566 sec]
+git diff --check：退出码 0。
+
+限制：未运行单元测试或项目测试套件；未向用户终端粘贴、执行命令或提交消息。证明的是原生菜单禁用缓存的复现与当前修复 helper 能将它恢复可用，以及菜单关闭后的目标身份保护仍通过，不等同于完整面板到 Pi 实际正文插入的端到端验证。
