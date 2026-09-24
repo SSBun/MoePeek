@@ -1,5 +1,7 @@
 # 任务索引
 
+- [解析结果回填失败时保留到剪贴板](tasks/parsing-writeback-clipboard-fallback.md) — Completed (2026-09-20 11:07)
+
 - [修复 iTerm2 中 Pi 输入区自动回填失败](tasks/fix-iterm2-text-writeback.md) — In Progress (2026-09-20 11:21)
 
 - [纠错面板同时展示完整修正句子](tasks/show-complete-corrected-sentence.md) — Completed (2026-09-18 14:35)

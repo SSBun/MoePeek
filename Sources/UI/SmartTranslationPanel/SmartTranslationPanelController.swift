@@ -106,11 +106,13 @@ final class SmartTranslationPanelController: NSObject, NSWindowDelegate {
                     // 新的打开或关闭操作已取代这次回填。
                 } catch {
                     guard let self, !Task.isCancelled, self.focusGeneration == generation else { return }
-                    self.pasteErrorToast.show(message: error.localizedDescription, duration: 4)
+                    let message = ParsingPasteTarget.copyAfterPasteFailure(text, error: error)
+                    self.pasteErrorToast.show(message: message, duration: 4)
                 }
             }
         } catch {
-            coordinator.showPasteFailure(error.localizedDescription)
+            let message = ParsingPasteTarget.copyAfterPasteFailure(text, error: error)
+            coordinator.showPasteFailure(message)
         }
     }
 

@@ -124,6 +124,9 @@
     "No English text to paste." : {
       "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "当前没有可回填的英文正文。" } } }
     },
+    "Result copied. Paste it manually if needed." : {
+      "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "结果已复制，可按需手动粘贴。" } } }
+    },
     "Could not copy the English result." : {
       "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "无法复制英文正文。" } } }
     },

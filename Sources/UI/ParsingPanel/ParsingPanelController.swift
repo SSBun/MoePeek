@@ -125,13 +125,15 @@ final class ParsingPanelController: NSObject, NSWindowDelegate {
                     guard let self, !Task.isCancelled, self.focusGeneration == generation else { return }
                     let reason = (error as? ParsingPasteError).map { String(describing: $0) } ?? "unknown"
                     Self.logger.error("paste.failed reason=\(reason, privacy: .public)")
-                    self.pasteErrorToast.show(message: error.localizedDescription, duration: 4)
+                    let message = ParsingPasteTarget.copyAfterPasteFailure(text, error: error)
+                    self.pasteErrorToast.show(message: message, duration: 4)
                 }
             }
         } catch {
             let reason = (error as? ParsingPasteError).map { String(describing: $0) } ?? "unknown"
             Self.logger.error("handoff.failed reason=\(reason, privacy: .public)")
-            coordinator.showPasteFailure(error.localizedDescription)
+            let message = ParsingPasteTarget.copyAfterPasteFailure(text, error: error)
+            coordinator.showPasteFailure(message)
         }
     }
 

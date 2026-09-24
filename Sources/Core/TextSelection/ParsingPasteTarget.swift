@@ -27,6 +27,19 @@ struct ParsingPasteTarget {
         return .success(ParsingPasteTarget(application: application, applicationElement: app, window: window, input: input, selection: selectedRange(input)))
     }
 
+    /// 回填失败时将正文留在剪贴板，并返回包含复制状态的提示。
+    static func copyAfterPasteFailure(_ text: String, error: Error) -> String {
+        guard !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            return error.localizedDescription
+        }
+        let pasteboard = NSPasteboard.general
+        pasteboard.clearContents()
+        let message = pasteboard.setString(text, forType: .string)
+            ? String(localized: "Result copied. Paste it manually if needed.")
+            : String(localized: "Could not copy the English result.")
+        return error.localizedDescription + "\n" + message
+    }
+
     /// 在面板关闭前先检查背景目标，避免已知无效目标导致结果无谓丢失。
     func validateBeforeHandoff() throws {
         try validate(requireForeground: false)
