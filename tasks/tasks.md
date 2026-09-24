@@ -38,7 +38,7 @@
 
 - [翻译面板失焦时自动关闭](tasks/dismiss-translation-panel-on-focus-loss.md) — Completed (2026-09-16 14:47)
 
-- [应用启动时自动启动复习服务](tasks/review-service-autostart.md) — Completed (2026-09-16 14:09)
+- [应用启动时自动启动复习服务](tasks/review-service-autostart.md) — Completed (2026-09-20 10:24)
 
 - [关闭解析面板悬停帮助提示](tasks/disable-parsing-help-tips.md) — Completed (2026-09-16 14:06)
 

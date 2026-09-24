@@ -1,36 +1,36 @@
 # 应用启动时自动启动复习服务
 
-Status: Completed (2026-09-16 14:09)
-Kind: Task
+| Field | Value |
+| --- | --- |
+| Status | Completed (2026-09-20 10:24) |
+| Kind | Task |
 
 ## Target
 - [x] T1: MoePeek 启动时自动启动本机复习服务，无需先点击英语复习入口。
 - [x] T2: 自动启动不打开浏览器，应用退出时仍停止服务。
+- [x] T3: 重新核实并确保当前 MoePeek 启动后自动启动本机历史复习服务，无需点击复习入口，也不自动打开浏览器。
 
 ## Plan
 
-1. 将既有服务启动接入应用启动生命周期，保留手动打开与退出清理路径。
-2. 核对任务差异、构建和生命周期调用链，不运行测试套件。
+1. 重新核实当前应用启动、服务监听、浏览器打开及退出清理调用链；已有实现满足目标时不重复修改。
+2. 只读检查运行进程、本机监听及复习页 HTTP 响应，记录未重启实测的限制，不运行测试套件。
 
 ## Result
 
-- T1: 逐行对比任务前副本 /tmp/moepeek-review-autostart-before：AppDelegate.applicationDidFinishLaunching 无条件新增 startHistoryService 调用；该方法在 MainActor Task 中调用既有 historyServer.start，不依赖用户点击或权限分支。Debug xcodebuild 成功（/tmp/moepeek-review-autostart-build.log）。
-- T2: 任务差异仅为启动调用及13行后台启动方法；无 NSWorkspace.open/弹窗调用，openHistory 及 applicationWillTerminate 中 historyServer.stop 均原样保留。已有 MoePeek 进程运行，未重启用户应用；未实测启动日志、浏览器或退出。
-- Review gate: Skipped — R1：两处局部接入，现有 server 生命周期及安全边界不变；任务前后差异和 Debug 构建足以验证该接入，未要求独立审查。
+- T1: 当前 MoePeekApp 使用 NSApplicationDelegateAdaptor(AppDelegate.self)；AppDelegate.applicationDidFinishLaunching 第48行无条件调用 startHistoryService，后者后台 await historyServer.start，不依赖复习入口或权限分支。本次未修改源码、未构建、未重启实测冷启动。
+- T2: 当前 startHistoryService 无浏览器调用；NSWorkspace.shared.open 仅在手动 openHistory 中；applicationWillTerminate 第68行保留 historyServer.stop。本次为源码核对，未实际退出应用。
+- T3: 启动调用链现已满足自动启动且不打开浏览器；lsof 确认运行中的 MoePeek PID 91563 监听 127.0.0.1:18765，curl 读取 /index.html 返回 HTTP 200。已有实现无需修改；当前监听不能单独证明冷启动，本次未重启应用或运行测试。
+- Review gate: Skipped — R0 无交付变更；源码调用链与当前服务 HTTP 响应已核实，无独立审查要求。
 ## Review Assessment
 
 - Schema: task-review-assessment/v1
-- Level: R1
+- Level: R0
 - State: Current
-- Reason: 仅接入既有幂等服务的启动生命周期，不修改网络、认证、存储或退出实现。
-- Snapshot: AppDelegate.swift SHA256=1de7cbad80fe3dc536cb4ad829b67539d29574538cc915dc33cd17be84ca0a89; ParsingCoordinator.swift SHA256=238fb446bd9efe5ac107e3ef9a51334befd771aaf42f3b165670f9eff63b4188; 任务前副本 /tmp/moepeek-review-autostart-before
-- Evidence: 任务前后精确 diff、现有 service.start/stop 调用链核对、Debug 构建成功、git diff --check 通过。
-- Result clarity: 目标是应用启动即调用现有服务，不打开浏览器，需求无歧义。
-- Bounded impact: 两处局部新增，无条件启动入口加后台 Task，消费者仍共享同一 server。
-- Low risk: 复用既有 loopback/令牌校验及幂等 start；启动失败仅固定日志，不改变数据，手动入口可重试。
-- Sufficient verification: 源码差异确认启动挂接及无浏览器调用、退出清理未变；Debug 编译链接通过。未执行运行中应用重启或测试套件，日志与运行效果未直接观察。
-- Task fingerprint: 5b41c6a66b7e3a8aa02eb385253e79d09762abf01a6a83c7f9ddff617c5e0ad9
+- Reason: 本次仅重新核实已有实现及只读 HTTP 可用性，无交付文件变更；保留用户原有未提交改动。
+- Snapshot: R0只读核实；AppDelegate SHA256=df7d801a79873a907223694f054511fef6bde69003b93c9a5d1a7bc5a6e06d15；ParsingCoordinator SHA256=ffa9ca3d22be2e57fae9298466b6d35d8e27a89c92da45ae4c649390b90f9fa2；ParsingHistoryServer SHA256=64285ff55d1a7030a6f5454fd81bcba6f7ad2d96f141c76928bfed92c7d8d532
+- Evidence: T1-T3：启动/退出/浏览器调用链源码核对；运行 PID 91563 监听回环端口18765，复习页 HTTP 200；未冷启动实测、构建或测试。
+- Task fingerprint: cb9b17f1e09860819c5bad5a70a6f28743a40be73b070ef9393afd94d286c615
 
 ## Verification
 
-- Passed: 最终两文件 SHA256 与评估一致；Debug 构建成功，任务前后差异、无浏览器启动路径、退出 stop 保留均已核对；diff 与 Context 校验通过。未重启正在运行的用户应用，未运行测试套件或实测日志。
+- Passed: 最终三个源码 SHA256 与评估一致；复习页再次 HTTP 200；本次任务记录 diff --check 与 Context validate 通过。源码已具备启动服务、不打开浏览器及退出停止链路，无需代码变更；未重启、未构建、未运行测试。
