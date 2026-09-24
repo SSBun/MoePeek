@@ -1,0 +1,37 @@
+{
+  "head": "6c7d15526bff997e37daa89b16017d59535929a0",
+  "taskOwned": [
+    "Sources/Core/SmartTranslationCoordinator.swift",
+    "Sources/Core/SmartTranslationResult.swift",
+    "Sources/Utilities/ParsingHistoryStore.swift",
+    "Resources/parsing-history.js",
+    "Resources/parsing-history.html",
+    "README_zh.md"
+  ],
+  "scopeStatus": " M README_zh.md\n M Resources/parsing-history.html\n M Resources/parsing-history.js\n M Sources/Core/SmartTranslationCoordinator.swift\n M Sources/Core/SmartTranslationResult.swift\n M Sources/Utilities/ParsingHistoryStore.swift\n",
+  "scopeStagedDiff": "",
+  "files": {
+    "Sources/Core/SmartTranslationCoordinator.swift": "f14615df686d13e22f29101cd176897f65e7b8eedf7f21a4944e8531b536669c",
+    "Sources/Core/SmartTranslationResult.swift": "dae4e57bf2abe10b82023e929fadc3b1344681a14bb84d679550cc876cb06e10",
+    "Sources/Utilities/ParsingHistoryStore.swift": "b4e11356e5f17c2ef5d296a3735c102054b2464a2a8c2db2c3b9c97b0da4b260",
+    "Resources/parsing-history.js": "720abcbbf530088059b47a23d1ec3de045b7cf41b70b840c3f4da74aa83d4620",
+    "Resources/parsing-history.html": "e91b6ccb107c0760839184b78e80f34d840d1da038af44eae8e5645028d939ce",
+    "README_zh.md": "0f8db3e5d7c34c7321ce7b72adad10a0a87dc66ea73b737d7c7bc8849553c08f",
+    "Sources/Core/ParsingResult.swift": "3e765f8fc569987cad2edca425be9958ed43d11f6e7a18ae97c80a721f730e6d",
+    "Sources/Core/ParsingCoordinator.swift": "ffa9ca3d22be2e57fae9298466b6d35d8e27a89c92da45ae4c649390b90f9fa2",
+    "Sources/Utilities/ParsingHistoryServer.swift": "c3cd6dcdcf8ea11fe1b4733d13f3b8cb7cb7300184c9aba7c0b7ce8f47f212a3",
+    "Sources/App/AppDelegate.swift": "df7d801a79873a907223694f054511fef6bde69003b93c9a5d1a7bc5a6e06d15",
+    "Resources/parsing-history.css": "67b1c71f62fd81352a34a4f64e8be013d34458494b58d7870cb156996d83bacf",
+    "tasks/context.md": "54bbfaa114c6be2d1684e193ca654c4fcbfd6d0682fe42f05076ea57fef28bf3",
+    "tasks/artifacts/record-word-translation-history/evidence/before/ParsingHistoryStore.swift": "ddaf25a398b53be8d7f3869a97d547b3b428c7b400b0602fd9ef4ba5dcdc0305",
+    "tasks/artifacts/record-word-translation-history/evidence/before/README_zh.md": "a22fcc0fb8b78105067b900ce879375065ebd7f30456d41c3a7cc9e4b94be4c4",
+    "tasks/artifacts/record-word-translation-history/evidence/before/SmartTranslationCoordinator.swift": "7dc54b493786634e8275b27e36616d9f1b2345c87eade530c13b120f4be8ce96",
+    "tasks/artifacts/record-word-translation-history/evidence/before/SmartTranslationResult.swift": "b11e0b4ddc523c5aa52ec19a6cd8bf0773e174b19f4afe3509970834fdea8f97",
+    "tasks/artifacts/record-word-translation-history/evidence/before/parsing-history.html": "8e96a179b5889c86a1af523fbae306ada18d3291e69430f27aa4ffaae30d191e",
+    "tasks/artifacts/record-word-translation-history/evidence/before/parsing-history.js": "f21cfa756f90b106ac1e8fe34655a77bbd9c083c1935714acd8b3636dc7d3edb",
+    "tasks/artifacts/record-word-translation-history/evidence/browser.png": "06729c7ad7ab15a2dfb6d77d17cbbe9cf256a5240915e2f1f4ca235107a69ec1",
+    "tasks/artifacts/record-word-translation-history/evidence/build.log": "4cb9129ac366eee4475088aa4b125837e67a6c1ab32e124244d27e398a3adcef",
+    "tasks/artifacts/record-word-translation-history/evidence/smoke.json": "2e0c879f60b3ece65af37f9f85ba14836988bff633a77c2f8af1a373fbdcabf1",
+    "tasks/artifacts/record-word-translation-history/evidence/task-only.diff": "1f8afbef3d573ab9f3ba43eb1844bd15978cd37d10dc4213eb4dd275b566513b"
+  }
+}

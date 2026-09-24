@@ -1,8 +1,39 @@
 import Darwin
 import Foundation
 
-/// 按本地日期保存完整解析结果；仅在用户明确删除时移除指定历史。
+/// 按本地日期保存完整解析与词条结果；仅在用户明确删除时移除指定历史。
 actor ParsingHistoryStore {
+    /// 历史专用载荷，保持解析协议不变，词条使用独立模式。
+    enum HistoryResult: Codable, Sendable {
+        /// 兼容现有 check、tutor 和 skip 记录。
+        case parsing(ParsingResult)
+        /// 一次查询得到的完整词条或候选列表。
+        case words([SmartTranslationResult.Entry])
+
+        private enum CodingKeys: String, CodingKey {
+            case mode, entries
+        }
+
+        init(from decoder: any Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            if try container.decode(String.self, forKey: .mode) == "words" {
+                self = .words(try container.decode([SmartTranslationResult.Entry].self, forKey: .entries))
+            } else {
+                self = .parsing(try ParsingResult(from: decoder))
+            }
+        }
+
+        func encode(to encoder: any Encoder) throws {
+            switch self {
+            case let .parsing(result):
+                try result.encode(to: encoder)
+            case let .words(entries):
+                var container = encoder.container(keyedBy: CodingKeys.self)
+                try container.encode("words", forKey: .mode)
+                try container.encode(entries, forKey: .entries)
+            }
+        }
+    }
     struct Entry: Codable, Sendable {
         let schemaVersion: Int
         let id: UUID
@@ -11,7 +42,7 @@ actor ParsingHistoryStore {
         let providerName: String
         let providerID: String
         let model: String?
-        let result: ParsingResult
+        let result: HistoryResult
     }
 
     /// 每次打卡保留当时的本地日期和绝对时间。
@@ -67,6 +98,42 @@ actor ParsingHistoryStore {
            rephrase?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ?? true {
             return nil
         }
+        return try await append(
+            sourceText: sourceText, result: .parsing(result), providerName: providerName,
+            providerID: providerID, model: model, date: date, timeZone: timeZone
+        )
+    }
+
+    /// 追加一次已完成的词条查询，候选词保存在同一条历史中。
+    @discardableResult
+    func append(
+        sourceText: String,
+        words: [SmartTranslationResult.Entry],
+        providerName: String,
+        providerID: String,
+        model: String? = nil,
+        date: Date = Date(),
+        timeZone: TimeZone = .current
+    ) async throws -> URL? {
+        guard (1...2).contains(words.count), words.allSatisfy(\.isValid) else {
+            throw CocoaError(.coderInvalidValue)
+        }
+        return try await append(
+            sourceText: sourceText, result: .words(words), providerName: providerName,
+            providerID: providerID, model: model, date: date, timeZone: timeZone
+        )
+    }
+
+    /// 两种载荷共用追加、锁定和历史版本更新，避免写入行为分叉。
+    private func append(
+        sourceText: String,
+        result: HistoryResult,
+        providerName: String,
+        providerID: String,
+        model: String?,
+        date: Date,
+        timeZone: TimeZone
+    ) async throws -> URL? {
         let formatter = DateFormatter()
         formatter.locale = Locale(identifier: "en_US_POSIX")
         formatter.calendar = Calendar(identifier: .gregorian)
@@ -75,8 +142,10 @@ actor ParsingHistoryStore {
         let day = formatter.string(from: date)
         let encoder = JSONEncoder()
         encoder.dateEncodingStrategy = .iso8601
+        let schemaVersion: Int
+        if case .words = result { schemaVersion = 3 } else { schemaVersion = 2 }
         var data = try encoder.encode(Entry(
-            schemaVersion: 2, id: UUID(), completedAt: date, sourceText: sourceText,
+            schemaVersion: schemaVersion, id: UUID(), completedAt: date, sourceText: sourceText,
             providerName: providerName, providerID: providerID, model: model, result: result
         ))
         data.append(0x0A)

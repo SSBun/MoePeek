@@ -9,13 +9,13 @@ enum SmartTranslationResult: Equatable, Sendable {
     /// 输入不适合词典或句子解析。
     case skip
 
-    struct Entry: Decodable, Equatable, Sendable {
-        struct Meaning: Decodable, Equatable, Sendable {
+    struct Entry: Codable, Equatable, Sendable {
+        struct Meaning: Codable, Equatable, Sendable {
             let partOfSpeech: String
             let definition: String
         }
 
-        struct Example: Decodable, Equatable, Sendable {
+        struct Example: Codable, Equatable, Sendable {
             let sentence: String
             let translation: String
         }

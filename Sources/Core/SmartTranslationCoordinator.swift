@@ -171,26 +171,32 @@ final class SmartTranslationCoordinator {
                 guard !Task.isCancelled, generation == self.generation else { return }
                 guard let parsing = ParsingResult.decode(content) else { throw SmartTranslationError.invalidResult }
                 result = .sentence(translation: translation, parsing: parsing)
-                // 与现有解析相同：已完成的解析独立保存，关闭面板不取消落盘。
-                let completedAt = Date()
-                let providerName = provider.displayName
-                let providerID = provider.id
-                let save = Task { [historyStore] in
-                    try await historyStore.append(
-                        sourceText: text,
-                        result: parsing,
-                        providerName: providerName,
-                        providerID: providerID,
-                        model: model,
-                        date: completedAt
+            }
+            // 已完成的词条和解析独立保存，关闭面板不取消落盘。
+            let completedAt = Date()
+            let providerName = provider.displayName
+            let providerID = provider.id
+            let save = Task<URL?, Error> { [historyStore] in
+                switch result {
+                case let .words(entries):
+                    return try await historyStore.append(
+                        sourceText: text, words: entries, providerName: providerName,
+                        providerID: providerID, model: model, date: completedAt
                     )
+                case let .sentence(_, parsing):
+                    return try await historyStore.append(
+                        sourceText: text, result: parsing, providerName: providerName,
+                        providerID: providerID, model: model, date: completedAt
+                    )
+                case .skip:
+                    return nil
                 }
-                do {
-                    _ = try await save.value
-                } catch {
-                    if !Task.isCancelled, generation == self.generation {
-                        historyError = String(localized: "Could not save parsing history. The result is still available; copy it before closing.")
-                    }
+            }
+            do {
+                _ = try await save.value
+            } catch {
+                if !Task.isCancelled, generation == self.generation {
+                    historyError = String(localized: "Could not save parsing history. The result is still available; copy it before closing.")
                 }
             }
             guard !Task.isCancelled, generation == self.generation else { return }

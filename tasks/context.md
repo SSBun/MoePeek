@@ -26,9 +26,9 @@
 - Recheck: 修改历史格式、浏览器资源加载方式、存储目录或应用退出生命周期时重新核对。
 
 ### Purpose and Boundaries
-- 完整解析结果按本地完成日期追加为 JSONL，保留结构化 ParsingResult；旧 Markdown 不迁移、不删除，也不进入网页日期索引。
+- 完整解析与智能词条结果按本地完成日期追加为 JSONL；解析仍使用 v2 ParsingResult 载荷，词条使用 v3 的 words 模式并保存完整 entries，一次中文查询的两个候选属于同一条记录。旧 Markdown 不迁移、不删除，也不进入网页日期索引。
 - 无纠错项且无非空改写的 check 在存储层直接返回 nil，不创建目录或文件；网页也过滤已存的此类 v2 记录，但不改写原文件，不推断旧 v1 记录是否无修改。
-- 解析完成后的保存任务独立于面板 reset 生命周期；保存失败不丢弃可复制的解析结果。
+- 解析与智能词条完成后的保存任务独立于面板 reset 生命周期；保存失败不丢弃可复制的结果。
 
 ### Relationships
 - ParsingCoordinator 持有同一历史 store 和 server；AppDelegate 启动时调用 startHistoryService 在后台启动服务但不打开浏览器，退出时停止。菜单及设置共享 openHistory 入口，仍调用幂等的 start 以复用服务或重试失败启动。
@@ -37,7 +37,7 @@
 - 用户可通过卡片删除图标确认永久删除指定日期、UUID 的 JSONL 行及关联复习状态；其他行保留原始字节。追加、删除和复习状态修改共享稳定的日期锁文件，避免原子替换 JSONL 后并发追加丢失；旧进程不识别该锁，更新后应退出旧版再使用删除入口。删除先清理关联状态，再原子提交 JSONL；后者失败时卡片仍保留，可点击重试。
 - 页面资源来自应用 Bundle，由 Project.swift 的 Resources/** 打包；浏览器以 JSONL 读取，DOM textContent 渲染，不执行记录中的 HTML。
 - 解析及智能翻译共享同一历史 Store；成功追加或删除后更新其内存 historyRevision，HTTP 版本接口供网页轮询，仅变化时重读日期和当前视图。版本先于内容读取，避免漏掉并发追加；新 Store 的新 UUID 可使旧页面识别应用重启。该机制不监控外部直接编辑 JSONL。
-- 正式复习页使用日期侧栏、14px 原文与解析同卡片直接展示，保持 check/tutor/skip 语义配色；兼容 v1 正文、自然表达、提示、词汇和语法字段。侧栏与日期下拉框的「★ 收藏」跨日期汇总；网页按来源日期及 UUID 关联收藏状态和卡片操作，不把汇总视图值作为 API 日期。
+- 正式复习页使用日期侧栏、14px 原文与解析同卡片直接展示，保持 check/tutor/skip 语义配色并展示 v3 词条的音标、释义、用法和双语例句；兼容 v1 正文、自然表达、提示、词汇和语法字段，全部词条字段参与搜索。侧栏与日期下拉框的「★ 收藏」跨日期汇总；网页按来源日期及 UUID 关联收藏状态和卡片操作，不把汇总视图值作为 API 日期。
 
 ### Decision and Verification Boundaries
 - HTTP 服务验证与原生菜单/浏览器交接验证不同；隔离服务运行不能证明原生窗口交互。
@@ -55,5 +55,5 @@
 - ParsingTextEditor、StyledParsingResultView 与 ParsingPanel 同时供解析和智能模式使用；改动共享输入、结果或窗口时需检查两个入口的行为。完整纠错句复用 ParsingResult.pasteText，结果视图读取各协调器的 submittedText 提交快照，不使用正在编辑的草稿；无法唯一、安全合成时保留逐项说明，不猜测整句。
 
 ### Relationships
-- 智能句子的解析结果保存到与 ParsingCoordinator 共享的 ParsingHistoryStore；词条不保存，中文译文不扩展现有历史格式。说明语言沿用 parsingExplanationLanguage。
+- 智能句子的解析结果与完整词条均保存到与 ParsingCoordinator 共享的 ParsingHistoryStore，并在同一复习页展示；词条使用 v3 words 载荷，句子仍只保存原 v2 解析部分，不附加中文译文。说明语言沿用 parsingExplanationLanguage。
 - 智能模式服务与快捷键的 Swift 名称已改变，但底层仍使用 wordLookupProviderID 和 inputWordLookup 存储名称，以继承旧用户设置。

@@ -39,6 +39,16 @@ function validTerms(terms, key) {
   return Array.isArray(terms) && terms.every(term => typeof term?.[key] === "string" && typeof term.note === "string");
 }
 
+function validWordEntry(entry) {
+  const nonempty = value => typeof value === "string" && value.trim().length > 0;
+  return entry && nonempty(entry.word) && nonempty(entry.phonetic)
+    && Array.isArray(entry.meanings) && entry.meanings.length > 0
+    && entry.meanings.every(meaning => nonempty(meaning?.partOfSpeech) && nonempty(meaning?.definition))
+    && (entry.usage == null || typeof entry.usage === "string")
+    && Array.isArray(entry.examples) && entry.examples.length === 3
+    && entry.examples.every(example => nonempty(example?.sentence) && nonempty(example?.translation));
+}
+
 function validRecord(entry) {
   const result = entry?.result;
   if (typeof entry?.sourceText !== "string" || typeof entry.providerName !== "string"
@@ -49,6 +59,10 @@ function validRecord(entry) {
       && (result.naturalExpression == null || typeof result.naturalExpression === "string")
       && (result.notice == null || typeof result.notice === "string")
       && validTerms(result.words, "word") && validTerms(result.grammar, "structure");
+  }
+  if (entry.schemaVersion === 3) {
+    return result.mode === "words" && Array.isArray(result.entries)
+      && result.entries.length >= 1 && result.entries.length <= 2 && result.entries.every(validWordEntry);
   }
   if (entry.schemaVersion !== 2) return false;
   switch (result.mode) {
@@ -76,6 +90,9 @@ function resultSearchParts(entry) {
       ...result.words.flatMap(word => [word.word, word.note]), ...result.grammar.flatMap(item => [item.structure, item.note])];
   }
   switch (result.mode) {
+    case "words": return result.entries.flatMap(word => [word.word, word.phonetic, word.usage,
+      ...word.meanings.flatMap(meaning => [meaning.partOfSpeech, meaning.definition]),
+      ...word.examples.flatMap(example => [example.sentence, example.translation])]);
     case "check": return [result.rephrase, ...result.items.flatMap(item => [item.wrong, item.right, item.reason])];
     case "tutor": return [result.sentence, ...result.words.flatMap(word => [word.word, word.note]),
       ...result.grammar.flatMap(item => [item.structure, item.note])];
@@ -98,9 +115,10 @@ function resultHeader(mode) {
     check: "M12 4l4 4M4 12l-1 5 5-1L17 7a2.8 2.8 0 0 0-4-4L4 12M11 17h6",
     tutor: "M5 2h11v14H5a2 2 0 0 0 0 4h12M5 2a2 2 0 0 0-2 2v14M7 2v14M9 12l2-7 2 7m-3.5-2h3",
     skip: "M3 5l7 5-7 5V5ZM10 5l7 5-7 5V5Z",
+    words: "M10 4C7 2 4 2 2 3v13c3-1 5-1 8 1m0-13c3-2 6-2 8-1v13c-3-1-5-1-8 1V4Z",
   }[mode]);
   svg.append(path);
-  heading.append(svg, element("span", { check: "Writing check", tutor: "Writing tutor", skip: "MoePeek" }[mode]));
+  heading.append(svg, element("span", { check: "Writing check", tutor: "Writing tutor", skip: "MoePeek", words: "Word lookup" }[mode]));
   return heading;
 }
 
@@ -115,6 +133,20 @@ function addTerms(parent, title, terms, key) {
     const line = element("p");
     line.append(element("span", term[key], "term"), document.createTextNode("  " + term.note));
     parent.append(line);
+  }
+}
+
+function addWordEntries(parent, words) {
+  for (const word of words) {
+    parent.append(element("p", `${word.word}  ${word.phonetic}`, "term"));
+    for (const meaning of word.meanings) {
+      parent.append(element("p", `[${meaning.partOfSpeech}] ${meaning.definition}`));
+    }
+    if (word.usage) parent.append(element("p", word.usage));
+    word.examples.forEach((example, index) => {
+      parent.append(element("p", `${index + 1}. ${example.sentence}`, "sentence"));
+      parent.append(element("p", example.translation));
+    });
   }
 }
 
@@ -271,6 +303,8 @@ function card(entry) {
       addSentence(body, result.sentence);
       addTerms(body, "Words", result.words, "word");
       addTerms(body, "Grammar", result.grammar, "structure");
+    } else if (result.mode === "words") {
+      addWordEntries(body, result.entries);
     } else {
       body.append(element("p", "内容过短、代码较多或不适合语言分析。"));
     }
@@ -291,9 +325,9 @@ function render() {
   entries.replaceChildren(...filtered.slice(0, visibleCount).map(entry => card(entry.record)));
   more.hidden = filtered.length <= visibleCount;
   const warning = skipped ? ` ${skipped} 条损坏或版本不支持的记录未显示，原文件已保留。` : "";
-  status.textContent = (filtered.length ? `${filtered.length} 条${favoritesOnly ? "收藏" : "解析"}${query ? " · 搜索结果" : ""}`
-    : selected.length ? "没有匹配的解析，试试其他关键词。"
-      : favoritesOnly ? "还没有收藏的解析。" : "这一天没有需要复习的解析。") + warning;
+  status.textContent = (filtered.length ? `${filtered.length} 条${favoritesOnly ? "收藏" : "记录"}${query ? " · 搜索结果" : ""}`
+    : selected.length ? "没有匹配的记录，试试其他关键词。"
+      : favoritesOnly ? "还没有收藏的记录。" : "这一天没有需要复习的记录。") + warning;
 }
 
 function updateSelectedDay() {
@@ -351,7 +385,7 @@ async function load(reloadDays = false, preserveVisibleCount = false) {
   const searchLabel = daySelect.value === favoritesView ? "搜索全部收藏" : "搜索当天内容";
   search.placeholder = searchLabel;
   search.setAttribute("aria-label", searchLabel);
-  status.textContent = "正在读取解析记录…";
+  status.textContent = "正在读取历史记录…";
   try {
     // 先取版本再读取内容；读取期间若新增记录，下一次轮询仍能检测到变化。
     const revision = await (await request("/api/history-revision", signal)).json();
@@ -374,7 +408,7 @@ async function load(reloadDays = false, preserveVisibleCount = false) {
       renderDates(days);
     }
     if (!daySelect.value) {
-      status.textContent = "还没有学习笔记。在 MoePeek 完成一次有学习内容的解析后，此页会自动更新。";
+      status.textContent = "还没有学习笔记。在 MoePeek 完成一次单词翻译或有学习内容的解析后，此页会自动更新。";
       loadedHistoryRevision = revision;
       return;
     }

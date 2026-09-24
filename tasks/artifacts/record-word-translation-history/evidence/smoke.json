@@ -1,0 +1,108 @@
+{
+  "限制": "真实 Coordinator、Store、结果模型和页面；Provider/注册表/语言检测为隔离替身，服务副本仅换动态端口，未读取或修改用户历史与应用设置，未运行测试套件。",
+  "地址": "http://127.0.0.1:51117/index.html",
+  "协调器观察": [
+    {
+      "historyError": "none",
+      "input": "resilient",
+      "records": "1",
+      "state": "Optional(serve.SmartTranslationCoordinator.ProviderState.completed(serve.SmartTranslationResult.words([serve.SmartTranslationResult.Entry(word: \"resilient\", phonetic: \"/rɪˈzɪliənt/\", meanings: [serve.SmartTranslationResult.Entry.Meaning(partOfSpeech: \"adjective\", definition: \"有韧性的；能恢复的\")], usage: nil, examples: [serve.SmartTranslationResult.Entry.Example(sentence: \"Stay resilient in difficult times.\", translation: \"在困难时期保持韧性。\"), serve.SmartTranslationResult.Entry.Example(sentence: \"Stay resilient in difficult times.\", translation: \"在困难时期保持韧性。\"), serve.SmartTranslationResult.Entry.Example(sentence: \"Stay resilient in difficult times.\", translation: \"在困难时期保持韧性。\")])])))"
+    },
+    {
+      "historyError": "none",
+      "input": "坚韧",
+      "records": "2",
+      "state": "Optional(serve.SmartTranslationCoordinator.ProviderState.completed(serve.SmartTranslationResult.words([serve.SmartTranslationResult.Entry(word: \"resilient\", phonetic: \"/rɪˈzɪliənt/\", meanings: [serve.SmartTranslationResult.Entry.Meaning(partOfSpeech: \"adjective\", definition: \"有韧性的；能恢复的\")], usage: Optional(\"侧重恢复能力。\"), examples: [serve.SmartTranslationResult.Entry.Example(sentence: \"Stay resilient in difficult times.\", translation: \"在困难时期保持韧性。\"), serve.SmartTranslationResult.Entry.Example(sentence: \"Stay resilient in difficult times.\", translation: \"在困难时期保持韧性。\"), serve.SmartTranslationResult.Entry.Example(sentence: \"Stay resilient in difficult times.\", translation: \"在困难时期保持韧性。\")]), serve.SmartTranslationResult.Entry(word: \"tenacious\", phonetic: \"/təˈneɪʃəs/\", meanings: [serve.SmartTranslationResult.Entry.Meaning(partOfSpeech: \"adjective\", definition: \"顽强的；坚韧的\")], usage: Optional(\"侧重坚持不放弃。\"), examples: [serve.SmartTranslationResult.Entry.Example(sentence: \"She is a tenacious researcher.\", translation: \"她是一位坚韧的研究者。\"), serve.SmartTranslationResult.Entry.Example(sentence: \"She is a tenacious researcher.\", translation: \"她是一位坚韧的研究者。\"), serve.SmartTranslationResult.Entry.Example(sentence: \"She is a tenacious researcher.\", translation: \"她是一位坚韧的研究者。\")])])))"
+    },
+    {
+      "historyError": "none",
+      "input": "She go home.",
+      "records": "3",
+      "state": "Optional(serve.SmartTranslationCoordinator.ProviderState.completed(serve.SmartTranslationResult.sentence(translation: Optional(\"她回家。\"), parsing: serve.ParsingResult.check(items: [serve.ParsingResult.Correction(wrong: \"go\", right: \"goes\", reason: \"主谓一致\")], rephrase: nil))))"
+    },
+    {
+      "historyError": "none",
+      "input": "correct sentence",
+      "records": "3",
+      "state": "Optional(serve.SmartTranslationCoordinator.ProviderState.completed(serve.SmartTranslationResult.sentence(translation: Optional(\"正确句子。\"), parsing: serve.ParsingResult.check(items: [], rephrase: nil))))"
+    },
+    {
+      "historyError": "none",
+      "input": "unsupported",
+      "records": "3",
+      "state": "Optional(serve.SmartTranslationCoordinator.ProviderState.completed(serve.SmartTranslationResult.skip))"
+    },
+    {
+      "historyError": "none",
+      "input": "invalid",
+      "records": "3",
+      "state": "Optional(serve.SmartTranslationCoordinator.ProviderState.error(\"Smart translation returned an invalid result. Please try again.\"))"
+    },
+    {
+      "roundTrip": "3 条记录可解码",
+      "versions": "3,3,2"
+    },
+    {
+      "historyError": "Could not save parsing history. The result is still available; copy it before closing.",
+      "saveFailureState": "Optional(serve.SmartTranslationCoordinator.ProviderState.completed(serve.SmartTranslationResult.words([serve.SmartTranslationResult.Entry(word: \"resilient\", phonetic: \"/rɪˈzɪliənt/\", meanings: [serve.SmartTranslationResult.Entry.Meaning(partOfSpeech: \"adjective\", definition: \"有韧性的；能恢复的\")], usage: nil, examples: [serve.SmartTranslationResult.Entry.Example(sentence: \"Stay resilient in difficult times.\", translation: \"在困难时期保持韧性。\"), serve.SmartTranslationResult.Entry.Example(sentence: \"Stay resilient in difficult times.\", translation: \"在困难时期保持韧性。\"), serve.SmartTranslationResult.Entry.Example(sentence: \"Stay resilient in difficult times.\", translation: \"在困难时期保持韧性。\")])])))"
+    },
+    {
+      "resetSavedRecords": "1",
+      "resetStateEmpty": "true"
+    }
+  ],
+  "初始记录版本": [
+    3,
+    3,
+    2,
+    1
+  ],
+  "浏览器": [
+    {
+      "检查": "新旧混合历史与完整词条",
+      "结果": {
+        "count": 4,
+        "status": "4 条记录",
+        "english": "11:33 AM · Local fixtureresilientWord lookupresilient  /rɪˈzɪliənt/[adjective] 有韧性的；能恢复的1. Stay resilient in difficult times.在困难时期保持韧性。2. Stay resilient in difficult times.在困难时期保持韧性。3. Stay resilient in difficult times.在困难时期保持韧性。☆✓",
+        "chinese": "11:33 AM · Local fixture坚韧Word lookupresilient  /rɪˈzɪliənt/[adjective] 有韧性的；能恢复的侧重恢复能力。1. Stay resilient in difficult times.在困难时期保持韧性。2. Stay resilient in difficult times.在困难时期保持韧性。3. Stay resilient in difficult times.在困难时期保持韧性。tenacious  /təˈneɪʃəs/[adjective] 顽强的；坚韧的侧重坚持不放弃。1. She is a tenacious researcher.她是一位坚韧的研究者。2. She is a tenacious researcher.她是一位坚韧的研究者。3. She is a tenacious researcher.她是一位坚韧的研究者。☆✓",
+        "legacy": "11:33 AM · Legacy fixturelegacy inputWriting tutor◇ legacy corrected旧记录☆✓"
+      }
+    },
+    {
+      "检查": "搜索 顽强的",
+      "结果": [
+        "坚韧"
+      ]
+    },
+    {
+      "检查": "搜索 侧重坚持",
+      "结果": [
+        "坚韧"
+      ]
+    },
+    {
+      "检查": "搜索 坚韧的研究者",
+      "结果": [
+        "坚韧"
+      ]
+    },
+    {
+      "检查": "词条收藏和学习",
+      "结果": "已收藏，今天已学习"
+    },
+    {
+      "检查": "新增词条自动刷新",
+      "结果": 5
+    },
+    {
+      "检查": "删除合成词条并保留旧记录",
+      "结果": [
+        "resilient",
+        "legacy input",
+        "She go home.",
+        "resilient"
+      ]
+    }
+  ],
+  "旧记录字节保留": true
+}
