@@ -1,5 +1,7 @@
 # 任务索引
 
+- [新增记录后自动更新复习网页](tasks/auto-refresh-history-records.md) — Completed (2026-09-18 13:52)
+
 - [支持书签直接访问本机复习页](tasks/bookmark-local-review-access.md) — Completed (2026-09-17 17:34)
 
 - [在时间侧栏增加星标收藏入口](tasks/starred-sidebar-filter.md) — Completed (2026-09-17 16:20)

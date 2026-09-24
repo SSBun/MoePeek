@@ -34,6 +34,9 @@ actor ParsingHistoryStore {
 
     nonisolated let directoryURL: URL
 
+    /// 本实例成功增删历史后的版本标识；新实例使用新值，让已打开网页识别应用重启。
+    private(set) var historyRevision = UUID()
+
     init(directoryURL: URL = URL.applicationSupportDirectory.appendingPathComponent("MoePeek/ParsingHistory", isDirectory: true)) {
         self.directoryURL = directoryURL
     }
@@ -113,6 +116,7 @@ actor ParsingHistoryStore {
             try? handle.synchronize()
             throw error
         }
+        historyRevision = UUID()
         return fileURL
     }
 
@@ -176,6 +180,7 @@ actor ParsingHistoryStore {
         }
         if matches == 1 {
             try retained.write(to: directoryURL.appendingPathComponent(day + ".jsonl"), options: [.atomic])
+            historyRevision = UUID()
         }
     }
 

@@ -197,6 +197,9 @@ final class ParsingHistoryServer {
                 respond(id, status: 200, type: "application/json", body: try encoder.encode(snapshot))
             } else if method != "GET" {
                 respond(id, status: 405)
+            } else if path == "/api/history-revision" {
+                let revision = await store.historyRevision
+                respond(id, status: 200, type: "application/json", body: try JSONEncoder().encode(revision))
             } else if path == "/api/days" {
                 let days = try await store.days()
                 respond(id, status: 200, type: "application/json", body: try JSONEncoder().encode(days))

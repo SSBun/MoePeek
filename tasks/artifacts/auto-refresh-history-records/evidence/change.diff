@@ -1,0 +1,150 @@
+diff --git a/README_zh.md b/README_zh.md
+index 159d43b..0d5395a 100644
+--- a/README_zh.md
++++ b/README_zh.md
+@@ -117,7 +117,7 @@ MoePeek 是一个纯 **AI vibe coding** 的自用项目。它能满足我个人
+ - 回填把正文写入系统剪贴板，再执行原应用的正常 Paste 菜单动作，遵循原光标/选区；不会设置整框文本、发送全局按键或额外 Return。英文正文留在剪贴板中；若检测到外部剪贴板变化则停止，不覆盖用户的新复制内容。无法通过 AX 确认可编辑的终端/自定义控件可能需要手动粘贴。
+ - 结果仍可选择文字复制或右键 **复制**；右键复制保留全部解析信息，而非 JSON。两种复制都不应用译文首字母格式化，也不写入翻译历史。
+ - **本地学习笔记**：完整且格式有效的解析结果按完成时的本地日期追加到 `~/Library/Application Support/MoePeek/ParsingHistory/YYYY-MM-DD.jsonl`。每行包含格式版本、唯一 ID、完成时间、原文、服务／模型信息，以及对应的完整 `check` / `tutor` / `skip` 结果；**没有纠错项且没有有效改写建议的 Writing check 不保存**（空白改写也视为没有建议）。旧文件中的此类记录仅在网页中过滤，不删除或改写历史；tutor 和 skip 沿用原有保存规则，多模型结果分别记录。新记录采用 `schemaVersion: 2`，复习页继续兼容旧 `schemaVersion: 1` 的正文／自然表达格式，旧 JSONL 不迁移或改写。失败或取消且未产生完整结果的请求不记录。模型名取自提交时的快照，未指定时存为 `null`。已有 Markdown 文件保持原样，不自动迁移或在复习页展示。
+-- 点击菜单栏的 **英语复习**，或 **设置 → 通用 → 解析 → 英语复习**，在浏览器中通过左侧日期栏阅读笔记、搜索当天内容。原文与解析在同一张圆角卡片中直接展示，内容采用 14px 字号；解析保留原生面板的等宽字体及青色、黄色、红绿纠错配色，支持深浅色切换。窄屏时日期改为顶部选择器。页面不使用 CDN 或外部服务，历史不上传。本机 HTTP 服务使用固定端口 `18765`，仅监听 `127.0.0.1`；端口被占用时启动失败，不自动切换端口；可将 `http://127.0.0.1:18765/index.html` 保存为书签，在应用运行时直接打开，无需会话令牌；仍检查 Host、Origin 和浏览器来源信息，所有写操作必须携带同源 Origin。退出 MoePeek 后服务关闭，重启应用后可继续通过原书签读取之前保存的 JSONL。
++- 点击菜单栏的 **英语复习**，或 **设置 → 通用 → 解析 → 英语复习**，在浏览器中通过左侧日期栏阅读笔记、搜索当天内容。原文与解析在同一张圆角卡片中直接展示，内容采用 14px 字号；解析保留原生面板的等宽字体及青色、黄色、红绿纠错配色，支持深浅色切换。窄屏时日期改为顶部选择器。页面不使用 CDN 或外部服务，历史不上传。本机 HTTP 服务使用固定端口 `18765`，仅监听 `127.0.0.1`；端口被占用时启动失败，不自动切换端口；可将 `http://127.0.0.1:18765/index.html` 保存为书签，在应用运行时直接打开，无需会话令牌；仍检查 Host、Origin 和浏览器来源信息，所有写操作必须携带同源 Origin。退出 MoePeek 后服务关闭，重启应用后可继续通过原书签读取之前保存的 JSONL。复习网页每 5 秒检查应用内历史版本，仅在新增或删除记录后更新日期导航与当前视图，保留当前日期、搜索词和已展开数量；隐藏标签页暂停检查，切回时立即检查更新。
+ - 每张复习卡片右侧提供垃圾桶图标；确认后按日期和记录 ID 从本地 JSONL 删除该条，并清理其收藏、学习状态，刷新或重启后不再出现。其他行（包括损坏行）保留原始字节；缺少有效 ID 或 ID 重复时不执行不安全删除。删除无法撤销；先清理关联状态，再原子提交历史删除。失败时历史卡片仍可能保留，请刷新核对并重试。`skip` 是模型返回的“跳过解析”结果，目前仍会保存，可按需手动删除。
+ - **打开解析记录文件夹** 仍可打开实际存储目录。这些文件是本地明文，请留意备份和共享范围。写入失败（包括取锁超过一秒）会在解析面板提示，结果仍可复制使用。损坏或版本不支持的 JSONL 行会在页面显示跳过数量，不修改源文件；单日文件超过 64 MiB 时页面会明确提示读取失败，原始记录不会截断。
+ - 若提示没有可用 LLM，从菜单栏打开设置，在通用页选择解析服务，或到服务页配置对应账户/模型。
+diff --git a/Resources/parsing-history.js b/Resources/parsing-history.js
+index 9a0adc5..6f0a097 100644
+--- a/Resources/parsing-history.js
++++ b/Resources/parsing-history.js
+@@ -20,6 +20,8 @@ let reviewSnapshots = new Map();
+ let reviewVersion = 0;
+ let reviewBusy = false;
+ let reviewControls = [];
++let loadedHistoryRevision;
++let historyRefreshBusy = false;
+ 
+ function element(tag, text, className) {
+   const node = document.createElement(tag);
+@@ -315,8 +317,25 @@ function renderDates(days) {
+   updateSelectedDay();
+ }
+ 
+-async function load(reloadDays = false) {
++async function refreshHistory() {
++  if (document.hidden || historyRefreshBusy || refresh.disabled || reviewBusy) return;
++  historyRefreshBusy = true;
++  const current = generation;
++  const version = reviewVersion;
++  try {
++    const revision = await (await request("/api/history-revision", AbortSignal.timeout(5_000))).json();
++    if (current !== generation || version !== reviewVersion || reviewBusy || document.hidden) return;
++    if (revision !== loadedHistoryRevision) await load(true, true);
++  } catch {
++    // 应用暂时退出或连接失败时保留现有内容，下次轮询或重新聚焦时重试。
++  } finally {
++    historyRefreshBusy = false;
++  }
++}
++
++async function load(reloadDays = false, preserveVisibleCount = false) {
+   const current = ++generation;
++  loadedHistoryRevision = undefined;
+   ++reviewVersion;
+   reviewSnapshots.clear();
+   reviewControls = [];
+@@ -336,6 +355,9 @@ async function load(reloadDays = false) {
+   search.setAttribute("aria-label", searchLabel);
+   status.textContent = "正在读取解析记录…";
+   try {
++    // 先取版本再读取内容；读取期间若新增记录，下一次轮询仍能检测到变化。
++    const revision = await (await request("/api/history-revision", signal)).json();
++    if (current !== generation) return;
+     if (reloadDays) {
+       const days = await (await request("/api/days", signal)).json();
+       if (current !== generation) return;
+@@ -344,8 +366,8 @@ async function load(reloadDays = false) {
+       }
+       const previous = daySelect.value;
+       availableDays = days;
+-      daySelect.replaceChildren(...[...days, favoritesView].map(day => {
+-        const option = element("option", day === favoritesView ? "★ 收藏" : day);
++      daySelect.replaceChildren(...[...(days.length ? days : [""]), favoritesView].map(day => {
++        const option = element("option", day === favoritesView ? "★ 收藏" : day || "暂无记录");
+         option.value = day;
+         return option;
+       }));
+@@ -354,7 +376,8 @@ async function load(reloadDays = false) {
+       renderDates(days);
+     }
+     if (!daySelect.value) {
+-      status.textContent = "还没有学习笔记。在 MoePeek 完成一次有学习内容的解析后，点击「刷新记录」。";
++      status.textContent = "还没有学习笔记。在 MoePeek 完成一次有学习内容的解析后，此页会自动更新。";
++      loadedHistoryRevision = revision;
+       return;
+     }
+     const days = daySelect.value === favoritesView ? availableDays : [daySelect.value];
+@@ -377,7 +400,8 @@ async function load(reloadDays = false) {
+       loadedRecords.push(...dayRecords.reverse());
+     }
+     records = loadedRecords;
+-    visibleCount = 30;
++    loadedHistoryRevision = revision;
++    if (!preserveVisibleCount) visibleCount = 30;
+     loaded = true;
+     render();
+     await refreshReview();
+@@ -396,7 +420,9 @@ search.addEventListener("input", () => { visibleCount = 30; render(); });
+ more.addEventListener("click", () => { visibleCount += 30; render(); });
+ theme.addEventListener("change", () => { document.documentElement.dataset.theme = theme.value; });
+ document.documentElement.dataset.theme = theme.value;
+-// 定期和重新聚焦时向本机服务校准日期，跨午夜或多标签页无需重新打开页面。
++// 仅在历史版本变化时重读内容；隐藏标签页暂停检查，回到页面后立即追赶更新。
++setInterval(refreshHistory, 5_000);
+ setInterval(refreshReview, 30_000);
+-window.addEventListener("focus", refreshReview);
++window.addEventListener("focus", async () => { await refreshHistory(); refreshReview(); });
++document.addEventListener("visibilitychange", () => { if (!document.hidden) refreshHistory(); });
+ load(true);
+diff --git a/Sources/Utilities/ParsingHistoryServer.swift b/Sources/Utilities/ParsingHistoryServer.swift
+index 5c844c9..ff3f543 100644
+--- a/Sources/Utilities/ParsingHistoryServer.swift
++++ b/Sources/Utilities/ParsingHistoryServer.swift
+@@ -197,6 +197,9 @@ final class ParsingHistoryServer {
+                 respond(id, status: 200, type: "application/json", body: try encoder.encode(snapshot))
+             } else if method != "GET" {
+                 respond(id, status: 405)
++            } else if path == "/api/history-revision" {
++                let revision = await store.historyRevision
++                respond(id, status: 200, type: "application/json", body: try JSONEncoder().encode(revision))
+             } else if path == "/api/days" {
+                 let days = try await store.days()
+                 respond(id, status: 200, type: "application/json", body: try JSONEncoder().encode(days))
+diff --git a/Sources/Utilities/ParsingHistoryStore.swift b/Sources/Utilities/ParsingHistoryStore.swift
+index 46e9357..c3a0c1f 100644
+--- a/Sources/Utilities/ParsingHistoryStore.swift
++++ b/Sources/Utilities/ParsingHistoryStore.swift
+@@ -34,6 +34,9 @@ actor ParsingHistoryStore {
+ 
+     nonisolated let directoryURL: URL
+ 
++    /// 本实例成功增删历史后的版本标识；新实例使用新值，让已打开网页识别应用重启。
++    private(set) var historyRevision = UUID()
++
+     init(directoryURL: URL = URL.applicationSupportDirectory.appendingPathComponent("MoePeek/ParsingHistory", isDirectory: true)) {
+         self.directoryURL = directoryURL
+     }
+@@ -113,6 +116,7 @@ actor ParsingHistoryStore {
+             try? handle.synchronize()
+             throw error
+         }
++        historyRevision = UUID()
+         return fileURL
+     }
+ 
+@@ -176,6 +180,7 @@ actor ParsingHistoryStore {
+         }
+         if matches == 1 {
+             try retained.write(to: directoryURL.appendingPathComponent(day + ".jsonl"), options: [.atomic])
++            historyRevision = UUID()
+         }
+     }
+ 

@@ -20,6 +20,8 @@ let reviewSnapshots = new Map();
 let reviewVersion = 0;
 let reviewBusy = false;
 let reviewControls = [];
+let loadedHistoryRevision;
+let historyRefreshBusy = false;
 
 function element(tag, text, className) {
   const node = document.createElement(tag);
@@ -315,8 +317,25 @@ function renderDates(days) {
   updateSelectedDay();
 }
 
-async function load(reloadDays = false) {
+async function refreshHistory() {
+  if (document.hidden || historyRefreshBusy || refresh.disabled || reviewBusy) return;
+  historyRefreshBusy = true;
+  const current = generation;
+  const version = reviewVersion;
+  try {
+    const revision = await (await request("/api/history-revision", AbortSignal.timeout(5_000))).json();
+    if (current !== generation || version !== reviewVersion || reviewBusy || document.hidden) return;
+    if (revision !== loadedHistoryRevision) await load(true, true);
+  } catch {
+    // 应用暂时退出或连接失败时保留现有内容，下次轮询或重新聚焦时重试。
+  } finally {
+    historyRefreshBusy = false;
+  }
+}
+
+async function load(reloadDays = false, preserveVisibleCount = false) {
   const current = ++generation;
+  loadedHistoryRevision = undefined;
   ++reviewVersion;
   reviewSnapshots.clear();
   reviewControls = [];
@@ -336,6 +355,9 @@ async function load(reloadDays = false) {
   search.setAttribute("aria-label", searchLabel);
   status.textContent = "正在读取解析记录…";
   try {
+    // 先取版本再读取内容；读取期间若新增记录，下一次轮询仍能检测到变化。
+    const revision = await (await request("/api/history-revision", signal)).json();
+    if (current !== generation) return;
     if (reloadDays) {
       const days = await (await request("/api/days", signal)).json();
       if (current !== generation) return;
@@ -344,8 +366,8 @@ async function load(reloadDays = false) {
       }
       const previous = daySelect.value;
       availableDays = days;
-      daySelect.replaceChildren(...[...days, favoritesView].map(day => {
-        const option = element("option", day === favoritesView ? "★ 收藏" : day);
+      daySelect.replaceChildren(...[...(days.length ? days : [""]), favoritesView].map(day => {
+        const option = element("option", day === favoritesView ? "★ 收藏" : day || "暂无记录");
         option.value = day;
         return option;
       }));
@@ -354,7 +376,8 @@ async function load(reloadDays = false) {
       renderDates(days);
     }
     if (!daySelect.value) {
-      status.textContent = "还没有学习笔记。在 MoePeek 完成一次有学习内容的解析后，点击「刷新记录」。";
+      status.textContent = "还没有学习笔记。在 MoePeek 完成一次有学习内容的解析后，此页会自动更新。";
+      loadedHistoryRevision = revision;
       return;
     }
     const days = daySelect.value === favoritesView ? availableDays : [daySelect.value];
@@ -377,7 +400,8 @@ async function load(reloadDays = false) {
       loadedRecords.push(...dayRecords.reverse());
     }
     records = loadedRecords;
-    visibleCount = 30;
+    loadedHistoryRevision = revision;
+    if (!preserveVisibleCount) visibleCount = 30;
     loaded = true;
     render();
     await refreshReview();
@@ -396,7 +420,9 @@ search.addEventListener("input", () => { visibleCount = 30; render(); });
 more.addEventListener("click", () => { visibleCount += 30; render(); });
 theme.addEventListener("change", () => { document.documentElement.dataset.theme = theme.value; });
 document.documentElement.dataset.theme = theme.value;
-// 定期和重新聚焦时向本机服务校准日期，跨午夜或多标签页无需重新打开页面。
+// 仅在历史版本变化时重读内容；隐藏标签页暂停检查，回到页面后立即追赶更新。
+setInterval(refreshHistory, 5_000);
 setInterval(refreshReview, 30_000);
-window.addEventListener("focus", refreshReview);
+window.addEventListener("focus", async () => { await refreshHistory(); refreshReview(); });
+document.addEventListener("visibilitychange", () => { if (!document.hidden) refreshHistory(); });
 load(true);
