@@ -1,5 +1,7 @@
 # 任务索引
 
+- [按独立功能分组提交全部本地改动](tasks/commit-local-feature-groups.md) — Completed (2026-09-24 11:46)
+
 - [将单词翻译记录到历史列表](tasks/record-word-translation-history.md) — Completed (2026-09-24 11:38)
 
 - [移除历史页面中的授权逻辑](tasks/remove-history-page-authorization.md) — Completed (2026-09-23 11:09)
