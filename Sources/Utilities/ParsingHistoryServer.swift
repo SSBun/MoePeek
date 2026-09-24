@@ -150,11 +150,8 @@ final class ParsingHistoryServer {
             respond(id, status: 400)
             return
         }
-        // 书签导航可不带 Origin；写操作必须明确来自本页，不能仅凭回环地址信任请求。
         guard let port = listener?.port,
-              headers["host"] == "127.0.0.1:\(port.rawValue)",
-              (method == "GET" && headers["origin"] == nil) || headers["origin"] == "http://127.0.0.1:\(port.rawValue)",
-              headers["sec-fetch-site"] == nil || ["same-origin", "none"].contains(headers["sec-fetch-site"] ?? "")
+              headers["host"] == "127.0.0.1:\(port.rawValue)"
         else { respond(id, status: 403); return }
         let path = String(request[1])
         let assets: [String: (String, String)] = [
@@ -164,12 +161,17 @@ final class ParsingHistoryServer {
             "/history.css": ("parsing-history.css", "text/css; charset=utf-8"),
             "/favicon.png": ("parsing-history-favicon.png", "image/png"),
         ]
+        // 固定静态资源不含历史数据；允许从任意网页链接直接进入，无需授权。
         if let (name, type) = assets[path], method == "GET" {
             guard let url = Bundle.main.url(forResource: name, withExtension: nil),
                   let data = try? Data(contentsOf: url) else { respond(id, status: 500); return }
             respond(id, status: 200, type: type, body: data)
             return
         }
+        // 仅数据接口检查来源；写操作必须明确来自本页，不能仅凭回环地址信任请求。
+        guard (method == "GET" && headers["origin"] == nil) || headers["origin"] == "http://127.0.0.1:\(port.rawValue)",
+              headers["sec-fetch-site"] == nil || ["same-origin", "none"].contains(headers["sec-fetch-site"] ?? "")
+        else { respond(id, status: 403); return }
         do {
             let components = path.split(separator: "/", omittingEmptySubsequences: false)
             if method == "POST", components.count == 6,

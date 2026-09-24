@@ -8,7 +8,6 @@ const entries = document.querySelector("#entries");
 const more = document.querySelector("#more");
 const refresh = document.querySelector("#refresh");
 const theme = document.querySelector("#theme");
-history.replaceState(null, "", location.pathname);
 let records = [];
 let skipped = 0;
 let visibleCount = 30;
@@ -32,7 +31,6 @@ function element(tag, text, className) {
 
 async function request(path, signal, method = "GET") {
   const response = await fetch(path, { method, cache: "no-store", signal });
-  if (response.status === 403) throw new Error("请求来源不受信任，请直接打开 MoePeek 的本机复习网址。");
   if (!response.ok) throw new Error("操作未完成，请刷新核对当前记录后重试。");
   return response;
 }

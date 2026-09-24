@@ -1,0 +1,27 @@
+{
+  "head": "6c7d15526bff997e37daa89b16017d59535929a0",
+  "branch": "main",
+  "taskOwned": [
+    "Sources/Utilities/ParsingHistoryServer.swift",
+    "Resources/parsing-history.js"
+  ],
+  "contextMaintenance": "tasks/context.md",
+  "gitScopeStatus": " M Resources/parsing-history.js\n M Sources/Utilities/ParsingHistoryServer.swift\n",
+  "stagedDiff": "",
+  "files": {
+    "Sources/Utilities/ParsingHistoryServer.swift": "c3cd6dcdcf8ea11fe1b4733d13f3b8cb7cb7300184c9aba7c0b7ce8f47f212a3",
+    "Resources/parsing-history.js": "f21cfa756f90b106ac1e8fe34655a77bbd9c083c1935714acd8b3636dc7d3edb",
+    "Resources/parsing-history.html": "8e96a179b5889c86a1af523fbae306ada18d3291e69430f27aa4ffaae30d191e",
+    "Resources/parsing-history.css": "67b1c71f62fd81352a34a4f64e8be013d34458494b58d7870cb156996d83bacf",
+    "Resources/parsing-history-favicon.png": "370bbc78638718a595ce00d01f21dccf39d2855ff2483942379d1a5e3a094e39",
+    "Sources/Utilities/ParsingHistoryStore.swift": "ddaf25a398b53be8d7f3869a97d547b3b428c7b400b0602fd9ef4ba5dcdc0305",
+    "Sources/Core/ParsingResult.swift": "3e765f8fc569987cad2edca425be9958ed43d11f6e7a18ae97c80a721f730e6d",
+    "tasks/context.md": "42157431c80f373ea9cc5c3d8b3f73dd69eacf18d8f27791a9fa8c13d77e5983",
+    "tasks/artifacts/remove-history-page-authorization/evidence/task-only.diff": "8326ff2f5c00c8812be274b34591ae27e03c5b02b2464aabde077233ddc0dde7",
+    "tasks/artifacts/remove-history-page-authorization/evidence/ParsingHistoryServer.before.swift": "64285ff55d1a7030a6f5454fd81bcba6f7ad2d96f141c76928bfed92c7d8d532",
+    "tasks/artifacts/remove-history-page-authorization/evidence/parsing-history.before.js": "6b7887e79df0283735af03b565449b2ba4c2e4369578fc4110264c6e15c44300",
+    "tasks/artifacts/remove-history-page-authorization/evidence/build.log": "7128c9be5e8f7f44af0a93cdd87b094b3b7efe24537b5f27d44f39e40f28fad5",
+    "tasks/artifacts/remove-history-page-authorization/evidence/http-smoke.json": "d248d7bfab682f86537cbf2dd7d0febc7c833a71cd1bc73c5540d6e225f57f1c",
+    "tasks/artifacts/remove-history-page-authorization/evidence/browser.png": "91b4fd9d4ec2c2cc07f1de2b2272f96563c2a172afad2b3b285327f4c04470f4"
+  }
+}
