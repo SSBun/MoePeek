@@ -18,10 +18,10 @@ final class SmartTranslationCoordinator {
     enum EnterAction {
         /// 新输入或失败后的重试。
         case process
-        /// 请求仍在执行，或词条已完成，无需重复请求。
+        /// 请求仍在执行，无需重复请求。
         case wait
-        /// 句子可按原解析规则回填英文。
-        case paste(String)
+        /// 已完成结果含可复制的英文词语或句子。
+        case copy(String)
         /// 仅有提示，没有英文正文。
         case noContent
     }
@@ -99,27 +99,23 @@ final class SmartTranslationCoordinator {
         }
     }
 
-    /// 只对当前输入的已完成句子回填，词条保留原来的显式复制方式。
+    /// 复制当前输入的已完成英文结果，词条和句子使用相同回车入口。
     func enterAction(for text: String) -> EnterAction {
         guard let submittedText, submittedText == text.trimmingCharacters(in: .whitespacesAndNewlines) else { return .process }
         for provider in activeSlots {
             if case let .completed(result) = providerStates[provider.id], let text = result.pasteText(for: submittedText) {
-                return .paste(text)
+                return .copy(text)
             }
         }
         if providerStates.values.contains(where: {
             if case .loading = $0 { return true }
             return false
         }) { return .wait }
-        // 所有请求结束后，成功词条不能阻止失败服务重试。
+        // 没有可复制结果且所有请求结束后，允许失败服务重试。
         if providerStates.values.contains(where: {
             if case .error = $0 { return true }
             return false
         }) { return .process }
-        if providerStates.values.contains(where: {
-            if case .completed(.words) = $0 { return true }
-            return false
-        }) { return .wait }
         if providerStates.values.contains(where: {
             if case .completed = $0 { return true }
             return false
@@ -127,7 +123,7 @@ final class SmartTranslationCoordinator {
         return .process
     }
 
-    func showPasteFailure(_ message: String) {
+    func showCopyFailure(_ message: String) {
         globalError = message
     }
 

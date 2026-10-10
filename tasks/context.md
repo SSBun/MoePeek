@@ -57,3 +57,4 @@
 ### Relationships
 - 智能句子的解析结果与完整词条均保存到与 ParsingCoordinator 共享的 ParsingHistoryStore，并在同一复习页展示；词条使用 v3 words 载荷，句子仍只保存原 v2 解析部分，不附加中文译文。说明语言沿用 parsingExplanationLanguage。
 - 智能模式服务与快捷键的 Swift 名称已改变，但底层仍使用 wordLookupProviderID 和 inputWordLookup 存储名称，以继承旧用户设置。
+- 智能模式再次按回车仅复制英文结果：词条取英文词语，多候选以换行分隔；句子沿用安全正文提取，不含中文译文、讲解或例句。不会捕获原输入框或自动粘贴；无英文正文时不复制提示文字。独立解析模式仍保留回填，右键及组合快捷键仍复制完整内容。

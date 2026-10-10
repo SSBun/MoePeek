@@ -1,7 +1,7 @@
 import AppKit
 import SwiftUI
 
-/// 智能模式使用解析面板的窗口交互，独立拥有请求、回填目标与生命周期。
+/// 智能模式使用解析面板的窗口交互，独立拥有请求与生命周期，结果仅复制到剪贴板。
 @MainActor
 final class SmartTranslationPanelController: NSObject, NSWindowDelegate {
     private static let preferredWidth: CGFloat = 560
@@ -12,9 +12,6 @@ final class SmartTranslationPanelController: NSObject, NSWindowDelegate {
     private var preferredContentHeight = ParsingPanelView.collapsedHeight
     private var isResizeScheduled = false
     private var focusGeneration = 0
-    private var pasteTarget: Result<ParsingPasteTarget, ParsingPasteError> = .failure(.noTarget)
-    private var pasteTask: Task<Void, Never>?
-    private let pasteErrorToast = ToastController()
 
     init(coordinator: SmartTranslationCoordinator) {
         self.coordinator = coordinator
@@ -29,12 +26,8 @@ final class SmartTranslationPanelController: NSObject, NSWindowDelegate {
 
     /// 重复打开只激活已有浮窗，不清空草稿或结果。
     func show() {
-        pasteTask?.cancel()
-        pasteTask = nil
-        pasteErrorToast.dismiss()
         focusGeneration += 1
         if panel == nil {
-            pasteTarget = ParsingPasteTarget.capture()
             let activeApp = NSWorkspace.shared.frontmostApplication
             previouslyActiveApp = activeApp?.processIdentifier == ProcessInfo.processInfo.processIdentifier ? nil : activeApp
             coordinator.reset()
@@ -69,9 +62,9 @@ final class SmartTranslationPanelController: NSObject, NSWindowDelegate {
                     guard let self, let panel, self.panel === panel else { return }
                     self.requestResize(to: height)
                 },
-                onPasteResult: { [weak self, weak panel] text in
+                onCopyResult: { [weak self, weak panel] text in
                     guard let self, let panel, self.panel === panel else { return }
-                    self.pasteResult(text)
+                    self.copyResult(text)
                 }
             )
             let hostingView = NSHostingView(rootView: content)
@@ -88,32 +81,14 @@ final class SmartTranslationPanelController: NSObject, NSWindowDelegate {
         panel?.makeKeyAndOrderFront(nil)
     }
 
-    /// 仅已完成句子可调用，目标捕获和回填验证复用原解析实现。
-    private func pasteResult(_ text: String) {
-        guard pasteTask == nil else { return }
-        do {
-            let target = try pasteTarget.get()
-            try target.validateBeforeHandoff()
-            let generation = focusGeneration
-            dismiss(restoringFocus: false)
-            pasteTask = Task { @MainActor [weak self] in
-                defer {
-                    if self?.focusGeneration == generation { self?.pasteTask = nil }
-                }
-                do {
-                    try await target.paste(text)
-                } catch is CancellationError {
-                    // 新的打开或关闭操作已取代这次回填。
-                } catch {
-                    guard let self, !Task.isCancelled, self.focusGeneration == generation else { return }
-                    let message = ParsingPasteTarget.copyAfterPasteFailure(text, error: error)
-                    self.pasteErrorToast.show(message: message, duration: 4)
-                }
-            }
-        } catch {
-            let message = ParsingPasteTarget.copyAfterPasteFailure(text, error: error)
-            coordinator.showPasteFailure(message)
+    /// 复制原本用于回填的英文正文，成功后关闭面板，不操作原输入框。
+    private func copyResult(_ text: String) {
+        NSPasteboard.general.clearContents()
+        guard NSPasteboard.general.setString(text, forType: .string) else {
+            coordinator.showCopyFailure(String(localized: "Could not copy the English result."))
+            return
         }
+        dismiss()
     }
 
     func windowShouldClose(_ sender: NSWindow) -> Bool {
@@ -148,9 +123,6 @@ final class SmartTranslationPanelController: NSObject, NSWindowDelegate {
 
     /// 清理本模式的窗口和请求，不改变其它模式；关闭前显式释放 contentView。
     func dismiss(restoringFocus: Bool = true) {
-        pasteTask?.cancel()
-        pasteTask = nil
-        pasteTarget = .failure(.noTarget)
         let shouldRestoreFocus = restoringFocus && NSApp.isActive && panel?.isKeyWindow == true
         if let keyMonitor { NSEvent.removeMonitor(keyMonitor) }
         keyMonitor = nil

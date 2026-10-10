@@ -6,7 +6,7 @@ import SwiftUI
 struct SmartTranslationPanelView: View {
     let coordinator: SmartTranslationCoordinator
     let onContentHeightChange: (CGFloat) -> Void
-    let onPasteResult: (String) -> Void
+    let onCopyResult: (String) -> Void
 
     @State private var draft = ""
     @State private var resultsHeight: CGFloat = 0
@@ -85,8 +85,8 @@ struct SmartTranslationPanelView: View {
             resultsHeight = 0
             coordinator.process(draft)
         case .wait: break
-        case let .paste(text): onPasteResult(text)
-        case .noContent: coordinator.showPasteFailure(String(localized: "No English text to paste."))
+        case let .copy(text): onCopyResult(text)
+        case .noContent: coordinator.showCopyFailure(String(localized: "No English text to copy."))
         }
     }
 
@@ -136,8 +136,8 @@ struct SmartTranslationPanelView: View {
             VStack(alignment: .leading, spacing: 5) {
                 if let translation {
                     Text(verbatim: translation).foregroundStyle(.secondary)
-                } else if coordinator.globalError == nil, case .paste = coordinator.enterAction(for: draft) {
-                    Text("Press Return again to paste the English result back.")
+                } else if coordinator.globalError == nil, case .copy = coordinator.enterAction(for: draft) {
+                    Text("Press Return again to copy the English result.")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }

@@ -1,5 +1,11 @@
 # 任务索引
 
+- [提交全部本地改动并发布新版本](tasks/release-local-changes.md) — In Progress (2026-10-10 15:58)
+
+- [智能翻译所有结果类型支持仅复制英文结果](tasks/copy-english-result-all-types.md) — Completed (2026-10-10 11:02)
+
+- [智能翻译改为仅复制结果而不回填](tasks/smart-translate-copy-only.md) — Completed (2026-10-10 10:33)
+
 - [按独立功能分组提交全部本地改动](tasks/commit-local-feature-groups.md) — Completed (2026-09-24 11:46)
 
 - [将单词翻译记录到历史列表](tasks/record-word-translation-history.md) — Completed (2026-09-24 11:38)
