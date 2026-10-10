@@ -1,6 +1,6 @@
 # 任务索引
 
-- [提交全部本地改动并发布新版本](tasks/release-local-changes.md) — In Progress (2026-10-10 15:58)
+- [提交全部本地改动并发布新版本](tasks/release-local-changes.md) — Completed (2026-10-10 16:09)
 
 - [智能翻译所有结果类型支持仅复制英文结果](tasks/copy-english-result-all-types.md) — Completed (2026-10-10 11:02)
 
