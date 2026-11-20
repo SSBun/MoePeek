@@ -1,0 +1,74 @@
+{
+  "schema": "task-snapshot/v1",
+  "taskId": "copy-individual-translation-options",
+  "files": [
+    {
+      "path": "Sources/Core/SmartTranslationCoordinator.swift",
+      "sha256": "df1815e49cc083fb10907dec001b94e430b79afc9a73337e463fddf4ecc4ca1e",
+      "git": {
+        "head": {
+          "mode": "100644",
+          "object": "870e4cc7c780239e1e668dc359d21bf2c6b48f92"
+        },
+        "index": [
+          {
+            "mode": "100644",
+            "object": "870e4cc7c780239e1e668dc359d21bf2c6b48f92",
+            "stage": 0
+          }
+        ]
+      }
+    },
+    {
+      "path": "Sources/Core/SmartTranslationResult.swift",
+      "sha256": "a904dd8a79c0434f2dbad39fa1148ae8ca51db13a22e0cb2cfe5528331234e8c",
+      "git": {
+        "head": {
+          "mode": "100644",
+          "object": "77ebbe3c9943b4943044020ad3ff728a28525262"
+        },
+        "index": [
+          {
+            "mode": "100644",
+            "object": "77ebbe3c9943b4943044020ad3ff728a28525262",
+            "stage": 0
+          }
+        ]
+      }
+    },
+    {
+      "path": "Sources/UI/SmartTranslationPanel/SmartTranslationPanelController.swift",
+      "sha256": "b45c6db0079797db7fd2dc770b7f19610686976acea60983bd4052c9a43bb5bb",
+      "git": {
+        "head": {
+          "mode": "100644",
+          "object": "beee913c612fdfba968ac579189c448dd3e13f3c"
+        },
+        "index": [
+          {
+            "mode": "100644",
+            "object": "beee913c612fdfba968ac579189c448dd3e13f3c",
+            "stage": 0
+          }
+        ]
+      }
+    },
+    {
+      "path": "Sources/UI/SmartTranslationPanel/SmartTranslationPanelView.swift",
+      "sha256": "3023ae3fae344597112d5911964f339e82733eb5269241a62122f63ae07a9d4c",
+      "git": {
+        "head": {
+          "mode": "100644",
+          "object": "04cf40eedd980f83e09015fbeeb04ba2875219c3"
+        },
+        "index": [
+          {
+            "mode": "100644",
+            "object": "04cf40eedd980f83e09015fbeeb04ba2875219c3",
+            "stage": 0
+          }
+        ]
+      }
+    }
+  ]
+}

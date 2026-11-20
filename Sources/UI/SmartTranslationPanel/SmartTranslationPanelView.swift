@@ -91,7 +91,8 @@ struct SmartTranslationPanelView: View {
     }
 
     private var results: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        let shortcutProviderID = coordinator.copyableResult?.providerID
+        return VStack(alignment: .leading, spacing: 12) {
             if let error = coordinator.globalError { Text(error).foregroundStyle(.red) }
             if let error = coordinator.historyError { Text(error).foregroundStyle(.red) }
             ForEach(coordinator.activeSlots, id: \.id) { provider in
@@ -106,7 +107,7 @@ struct SmartTranslationPanelView: View {
                         case let .error(message):
                             Text(message).foregroundStyle(.red)
                         case let .completed(result):
-                            resultView(result)
+                            resultView(result, showsCopyShortcuts: provider.id == shortcutProviderID)
                                 .textSelection(.enabled)
                                 .contextMenu {
                                     Button("Copy") {
@@ -123,13 +124,18 @@ struct SmartTranslationPanelView: View {
     }
 
     @ViewBuilder
-    private func resultView(_ result: SmartTranslationResult) -> some View {
+    private func resultView(_ result: SmartTranslationResult, showsCopyShortcuts: Bool) -> some View {
         switch result {
         case let .words(entries):
             VStack(alignment: .leading, spacing: 8) {
                 ForEach(Array(entries.enumerated()), id: \.offset) { index, entry in
                     if index > 0 { Divider() }
-                    SmartDictionaryEntryView(entry: entry, fontSize: CGFloat(fontSize), fontName: fontName)
+                    SmartDictionaryEntryView(
+                        entry: entry,
+                        fontSize: CGFloat(fontSize),
+                        fontName: fontName,
+                        copyShortcut: showsCopyShortcuts && index < 2 ? (index == 0 ? "↩" : "⇧↩") : nil
+                    )
                 }
             }
         case let .sentence(translation, parsing):
@@ -153,6 +159,7 @@ private struct SmartDictionaryEntryView: View {
     let entry: SmartTranslationResult.Entry
     let fontSize: CGFloat
     let fontName: String
+    let copyShortcut: String?
     @Environment(\.colorScheme) private var colorScheme
 
     private var accent: Color {
@@ -161,9 +168,19 @@ private struct SmartDictionaryEntryView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 3) {
-            // 一个 Text 保留窄窗口和长词条的自然换行，不让音标挤压标题。
-            (Text(verbatim: entry.word).font(.popup(name: fontName, size: fontSize + 3)).fontWeight(.semibold)
-                + Text(verbatim: "  " + entry.phonetic).foregroundColor(.secondary))
+            HStack(alignment: .firstTextBaseline, spacing: 8) {
+                // 一个 Text 保留窄窗口和长词条的自然换行。
+                (Text(verbatim: entry.word).font(.popup(name: fontName, size: fontSize + 3)).fontWeight(.semibold)
+                    + Text(verbatim: "  " + entry.phonetic).foregroundColor(.secondary))
+                Spacer(minLength: 0)
+                if let copyShortcut {
+                    Text(verbatim: copyShortcut)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .fixedSize()
+                        .accessibilityLabel(copyShortcut == "↩" ? "Return" : "Shift-Return")
+                }
+            }
             ForEach(Array(entry.meanings.enumerated()), id: \.offset) { _, meaning in
                 Text(verbatim: meaning.partOfSpeech).foregroundColor(accent)
                     + Text(verbatim: "  " + meaning.definition)

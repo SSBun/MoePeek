@@ -57,15 +57,17 @@ enum SmartTranslationResult: Equatable, Sendable {
         }
     }
 
-    /// 提取回车复制的英文结果：词条只取英文词语，句子沿用安全纠错规则，不含讲解或例句。
-    func pasteText(for source: String) -> String? {
+    /// 提取单条英文结果，句子沿用安全纠错规则。
+    func pasteText(for source: String, candidateIndex: Int = 0) -> String? {
         switch self {
         case let .words(entries):
-            let words = entries.map { $0.word.trimmingCharacters(in: .whitespacesAndNewlines) }
-                .filter { !$0.isEmpty }
-            return words.isEmpty ? nil : words.joined(separator: "\n")
+            guard entries.indices.contains(candidateIndex) else {
+                return nil
+            }
+            let word = entries[candidateIndex].word.trimmingCharacters(in: .whitespacesAndNewlines)
+            return word.isEmpty ? nil : word
         case let .sentence(_, parsing):
-            return parsing.pasteText(for: source)
+            return candidateIndex == 0 ? parsing.pasteText(for: source) : nil
         case .skip:
             return nil
         }

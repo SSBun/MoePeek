@@ -1,5 +1,7 @@
 # 任务索引
 
+- [按快捷键复制单个翻译选项](tasks/copy-individual-translation-options.md) — Completed (2026-11-20 16:36)
+
 - [提交全部本地改动并发布新版本](tasks/release-local-changes.md) — Completed (2026-10-10 16:09)
 
 - [智能翻译所有结果类型支持仅复制英文结果](tasks/copy-english-result-all-types.md) — Completed (2026-10-10 11:02)

@@ -168,14 +168,21 @@ final class SmartTranslationPanelController: NSObject, NSWindowDelegate {
         requestResize(to: preferredContentHeight)
     }
 
-    /// 保留旧单词模式的显式复制快捷键，且只消费此窗口的键盘事件。
+    /// 处理当前浮窗的词条复制快捷键和原有的显式复制快捷键。
     private func startKeyMonitor() {
         keyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
             guard let self, let panel = self.panel, panel.isKeyWindow, event.window === panel else { return event }
             if (panel.firstResponder as? NSTextView)?.hasMarkedText() == true { return event }
             let modifiers = event.modifierFlags.intersection([.command, .option, .control, .shift])
+            let isReturn = event.keyCode == 36 || event.keyCode == 76
+            if isReturn, modifiers == .shift, let text = self.coordinator.copyableResult?.secondary {
+                if !event.isARepeat {
+                    self.copyResult(text)
+                }
+                return nil
+            }
             guard modifiers == .command else { return event }
-            if event.keyCode == 36 || event.keyCode == 76 {
+            if isReturn {
                 let result = self.coordinator.activeSlots.lazy.compactMap { provider -> SmartTranslationResult? in
                     if case let .completed(result) = self.coordinator.providerStates[provider.id] { return result }
                     return nil

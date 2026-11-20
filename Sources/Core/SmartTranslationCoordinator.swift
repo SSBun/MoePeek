@@ -99,13 +99,25 @@ final class SmartTranslationCoordinator {
         }
     }
 
+    /// 快捷键使用同一个已完成的服务结果，避免复制与提示指向不同的服务。
+    var copyableResult: (providerID: String, primary: String, secondary: String?)? {
+        guard let submittedText else {
+            return nil
+        }
+        for provider in activeSlots {
+            if case let .completed(result) = providerStates[provider.id],
+               let primary = result.pasteText(for: submittedText) {
+                return (provider.id, primary, result.pasteText(for: submittedText, candidateIndex: 1))
+            }
+        }
+        return nil
+    }
+
     /// 复制当前输入的已完成英文结果，词条和句子使用相同回车入口。
     func enterAction(for text: String) -> EnterAction {
         guard let submittedText, submittedText == text.trimmingCharacters(in: .whitespacesAndNewlines) else { return .process }
-        for provider in activeSlots {
-            if case let .completed(result) = providerStates[provider.id], let text = result.pasteText(for: submittedText) {
-                return .copy(text)
-            }
+        if let copyableResult {
+            return .copy(copyableResult.primary)
         }
         if providerStates.values.contains(where: {
             if case .loading = $0 { return true }
