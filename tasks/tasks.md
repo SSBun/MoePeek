@@ -1,6 +1,6 @@
 # 任务索引
 
-- [发布并安装 MoePeek 下一个次版本](tasks/release-next-minor.md) — In Progress (2026-11-24 11:22)
+- [发布并安装 MoePeek 下一个次版本](tasks/release-next-minor.md) — Completed (2026-11-24 11:40)
 
 - [按快捷键复制单个翻译选项](tasks/copy-individual-translation-options.md) — Completed (2026-11-20 16:36)
 
