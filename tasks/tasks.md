@@ -1,6 +1,6 @@
 # 任务索引
 
-- [提交并推送 MoePeek 全部本地改动](tasks/commit-and-push-local-changes.md) — In Progress (2026-11-24 11:50)
+- [提交并推送 MoePeek 全部本地改动](tasks/commit-and-push-local-changes.md) — Completed (2026-11-24 11:51)
 
 - [在关于页查看版本更新内容](tasks/about-version-release-notes.md) — Completed (2026-11-24 11:49)
 
