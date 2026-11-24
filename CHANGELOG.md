@@ -2,6 +2,18 @@
 
 ## [Unreleased]
 
+## [0.22.0] - 2026-11-24
+
+### Changed
+
+- 智能翻译有两个英文候选时，按 Return 复制第一项，按 Shift+Return 复制第二项。两种快捷键均只复制所选候选的英文正文。
+- 在词条标题旁显示可用的复制快捷键。仅有一个候选时，Shift+Return 仍可换行。
+
+### Notes
+
+- 版本为 0.22.0，build 6，要求 macOS 14.0 或更高版本。
+- 本次通过 GitHub Release 提供手动安装包，使用 Apple Development 签名，未经 Apple 公证。
+
 ## [0.15.0] - 2026-10-10
 
 ### Added
@@ -49,7 +61,8 @@
 - Focus the text area automatically when manual translation opens from its shortcut.
 - Preserve existing Keychain credentials if replacement fails.
 
-[Unreleased]: https://github.com/SSBun/MoePeek/compare/v0.15.0...HEAD
+[Unreleased]: https://github.com/SSBun/MoePeek/compare/v0.22.0...HEAD
+[0.22.0]: https://github.com/SSBun/MoePeek/releases/tag/v0.22.0
 [0.15.0]: https://github.com/SSBun/MoePeek/releases/tag/v0.15.0
 [0.14.0]: https://github.com/SSBun/MoePeek/compare/v0.13.0...v0.14.0
 [0.13.0]: https://github.com/SSBun/MoePeek/compare/v0.12.1...v0.13.0
