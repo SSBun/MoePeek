@@ -2,7 +2,7 @@
 schema: csl-memory-index/v4
 formatVersion: 5
 scope: project
-generation: 07ee71467681d594fa25e1150c1a2bfcd081c8ef8db4672c336e7b6f2c4849b0
+generation: c5d61f1cdb85e859acbf7d6bc2655e765c112042f780782bbaba5d5c582b210d
 count: 3
 entries: entries
 ---
@@ -19,12 +19,12 @@ sha256: dacb2c61158f4e8862eeab172c24c5ff0764fd7cad0f2ce4c1a254da6b007de0
 
 ## [MoePeek 项目经验](entries/lessons.md)
 
-MoePeek 中可跨任务复用的实现经验及核对要点。
+MoePeek 中可跨任务复用的实现、发布与核对经验。
 
-sha256: da4a91e470a4a285f57181fd9491d13aa0a5fa332a6e6c8ad1403ab74dd39865
+sha256: 9af94f24e2fa2eb7c09175333bb870d1fc66f6850710fda2d7911ab53f0a8ea6
 
 ## [近期上下文](entries/temp.md)
 
 最近7个UTC自然日的用户意图与必要背景；不是执行授权。
 
-sha256: 9823208ae2da3e5de633a62fe73d4d8caaff6dc5281ecfb49df7524e7d113b3e
+sha256: a1c8fe3f85a39a2374adcb3e5afb3c02e600a30930191c9a897ce18e7f081327

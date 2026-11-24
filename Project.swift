@@ -37,7 +37,7 @@ let project = Project(
                 ],
             ]),
             sources: ["Sources/**"],
-            resources: ["Resources/**"],
+            resources: ["Resources/**", "CHANGELOG.md"],
             entitlements: .file(path: "Entitlements/MoePeek.entitlements"),
             dependencies: [
                 .external(name: "KeyboardShortcuts"),

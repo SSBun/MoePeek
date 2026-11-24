@@ -1,0 +1,74 @@
+{
+  "schema": "task-snapshot/v1",
+  "taskId": "about-version-release-notes",
+  "files": [
+    {
+      "path": "CHANGELOG.md",
+      "sha256": "769e51860e19486ec076abbd7e052c796086be1ce474bffedd0d36c3796a84ba",
+      "git": {
+        "head": {
+          "mode": "100644",
+          "object": "46ac67c35c71510b3bf54ec00c0b5bbdb8acd92a"
+        },
+        "index": [
+          {
+            "mode": "100644",
+            "object": "46ac67c35c71510b3bf54ec00c0b5bbdb8acd92a",
+            "stage": 0
+          }
+        ]
+      }
+    },
+    {
+      "path": "Project.swift",
+      "sha256": "359c450c01c44dd44a163ac66148ca0fc2954332551722c9ed072b9e802ba47e",
+      "git": {
+        "head": {
+          "mode": "100644",
+          "object": "b70ab77dce2f83bc006d1a16d4ef75f825122c93"
+        },
+        "index": [
+          {
+            "mode": "100644",
+            "object": "b70ab77dce2f83bc006d1a16d4ef75f825122c93",
+            "stage": 0
+          }
+        ]
+      }
+    },
+    {
+      "path": "Resources/Localizable.xcstrings",
+      "sha256": "efe8bfc83ab69ff9539f60f3958f9b47149569ade4f32e92c4e712c967433f26",
+      "git": {
+        "head": {
+          "mode": "100644",
+          "object": "283aef8076ba0e31048b29f3d85d5ff098881b4d"
+        },
+        "index": [
+          {
+            "mode": "100644",
+            "object": "283aef8076ba0e31048b29f3d85d5ff098881b4d",
+            "stage": 0
+          }
+        ]
+      }
+    },
+    {
+      "path": "Sources/UI/Settings/AboutSettingsView.swift",
+      "sha256": "d5886328a6e9596d79f570d77ebd21691a30fa44f443febd99ce78aa89497bce",
+      "git": {
+        "head": {
+          "mode": "100644",
+          "object": "04d1c2663ffc0e21b2637cf00b1f08866896e881"
+        },
+        "index": [
+          {
+            "mode": "100644",
+            "object": "04d1c2663ffc0e21b2637cf00b1f08866896e881",
+            "stage": 0
+          }
+        ]
+      }
+    }
+  ]
+}
